@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "ftc-toolchain": {
+      "command": "npx",
+      "args": ["-y", "ftc-toolchain"],
+      "env": {
+        "FTC_TOOLCHAIN_PROJECT_DIR": "C:\\Users\\alcad\\Code\\FtcRobotController-11.0"
+      }
+    }
+  }
+}
