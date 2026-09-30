@@ -1,7 +1,7 @@
 # Odometry: dead-wheel placement (bare chassis)
 
-Two goBILDA odometry pods + goBILDA Pinpoint, used by Pedro Pathing
-(`TeamCode/.../pedroPathing/Constants.java`).
+Two goBILDA odometry pods (dead wheels) read directly by the REV hub, plus the Control Hub IMU for heading,
+used by Pedro Pathing's two-wheel localizer (`TeamCode/.../pedroPathing/Constants.java`). No Pinpoint computer.
 
 ![Placement on the chassis photo](media/odometry-placement.jpg)
 
@@ -52,9 +52,24 @@ measurement matter more.
 .strafePodX(0.0)   // strafe pod fore/aft offset from O, inches. FORWARD of centre is positive.
 ```
 
-Sign convention taken from the FTC SDK sample `SensorGoBildaPinpoint.java` lines 79-102 in this repo
-(X/forward pod: left of centre positive. Y/strafe pod: forward of centre positive).
 These are **planned** values. Replace them with tape-measured ones (below).
+Sign convention: Pedro's field frame is +x forward, +y left, and the names are that pod's y or x coordinate.
+I took the signs from the goBILDA SDK sample (`SensorGoBildaPinpoint.java` lines 79-86), which uses the same
+convention. The spin-in-place test below confirms it on the real robot.
+
+`Constants.java` also needs (all marked TODO there):
+
+- **Encoder ports:** `forwardEncoder_HardwareMapName` / `strafeEncoder_HardwareMapName` are the *motor-config names*
+  of the ports the pod cables plug into. The code drives 8 motors (4 drive, 2 intake, 2 shooter) and a REV hub has 4 motor ports, so
+  the pods will likely have to share ports with motors that don't need an encoder: a drive motor or an intake motor, **never the shooter**.
+  The placeholders are `lf` and `rb`.
+- **Health monitor caveat:** `RobotHealthMonitor` reads every motor's velocity. On a port shared with a pod, that
+  reading is the pod's, so its stall check there (power applied, velocity about 0) can misfire or be masked.
+- **IMU:** name `imu`, and the orientation must match how the Control Hub is mounted (logo and USB direction).
+  Mount the hub flat and rigid.
+- **Ticks to inches:** placeholder 0.001979 in/tick, from 2000 ticks/rev on a 32 mm wheel (4-bar pod).
+  Swingarm pod (48 mm wheel) is about 0.002968. Refine with Pedro's Forward and Lateral tuners.
+- **Encoder directions:** see Verify.
 
 ## Measure after mounting
 
@@ -72,25 +87,30 @@ These are **planned** values. Replace them with tape-measured ones (below).
   pod's mounting surface and compare it with the pod drawing; add spacers if needed.
 - Keep the pod cables clear of the front-left motor cable bundle that currently crosses the left end of
   the front crossbar.
-- Pinpoint on an I2C port 1-3 (never 0), configured as `pinpoint` (matches `Constants.java`).
+- Before plugging a pod into a REV encoder port, confirm the pod's connector pinout and supply voltage against
+  the goBILDA pod manual. I could not check it from here.
 
 ## Verify
 
-- Encoder directions: push the robot forward by hand, the forward pod count must rise. Push it left, the
-  strafe pod count must rise (SDK sample lines 98-104). Flip `forwardEncoderDirection` /
-  `strafeEncoderDirection` in `Constants.java` if not.
+- Encoder directions: run Pedro's Localization Test. Push the robot forward by hand and x must rise. Push it
+  left and y must rise. Flip `forwardEncoderDirection` / `strafeEncoderDirection` in `Constants.java` if not.
+- Heading: turn the robot left (counter-clockwise from above) and heading must increase. If it doesn't, the
+  Control Hub orientation in `Constants.java` is wrong.
 - Spin the robot in place several turns by hand: the reported x/y should stay put. If x/y drifts in a
   circle, an offset value or its sign is wrong.
 - Push it a known distance (a metre stick or field tile edge) and compare.
 
 ## Open items
 
-- **Which pod type?** goBILDA sells the swingarm pod (48 mm wheel) and the 4-bar pod (32 mm wheel).
-  `Constants.java` does not set the encoder resolution, so it must match your pod
-  (SDK sample lines 89-96: `goBILDA_SWINGARM_POD` or `goBILDA_4_BAR_POD`). Check Pedro 2.1.2's
-  `PinpointConstants` for the matching builder call.
-- Confirm the Pinpoint computer is fitted. If the pod encoders go to REV hub ports instead, the constants
-  need a two-wheel (IMU) localizer instead. The placement above still applies.
+- **Which pod type?** goBILDA sells the swingarm pod (48 mm wheel) and the 4-bar pod (32 mm wheel). This sets
+  `forwardTicksToInches` / `strafeTicksToInches`.
+- **Which hub ports** the pods plug into, and how the Control Hub is mounted (IMU orientation).
+- **Not compile-checked.** I could not download Pedro 2.1.2 here. The two-wheel localizer calls
+  (`TwoWheelConstants`, `Encoder`, `.twoWheelLocalizer(...)`) follow Pedro's documented API. If Android Studio
+  flags any of them, its autocomplete on `TwoWheelConstants` shows the 2.1.2 names. Newer Pedro releases dropped the
+  IMU-orientation requirement, so delete `.IMU_Orientation(...)` if 2.1.2 doesn't have it.
+- Heading now comes from the hub IMU alone, so expect more heading drift over a match than a Pinpoint gives.
+  `CompTeleOp` already has a heading-reset control.
 
 ## How the numbers were derived
 

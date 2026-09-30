@@ -128,7 +128,7 @@ public class CompTeleOp extends OpMode {
     }
 
     /**
-     * Zero the robot's heading in the Pedro follower to the driver's current facing, for when the IMU/Pinpoint heading drifts mid-match.
+     * Zero the robot's heading in the Pedro follower to the driver's current facing, for when the IMU heading drifts mid-match.
      */
     private void resetHeading() {
         Pose current = follower.getPose();

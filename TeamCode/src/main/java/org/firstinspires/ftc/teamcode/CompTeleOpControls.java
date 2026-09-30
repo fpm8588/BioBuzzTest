@@ -40,6 +40,6 @@ public class CompTeleOpControls {
     public static boolean sortRight(Gamepad driver, Gamepad operator) { return operator.right_bumper; }
 
     // ===== AUTOMATION TRIGGERS =====
-    // Zero the robot's heading in the Pedro follower to the driver's current facing, for when the IMU/Pinpoint heading drifts mid-match.
+    // Zero the robot's heading in the Pedro follower to the driver's current facing, for when the IMU heading drifts mid-match.
     public static boolean resetHeading(Gamepad driver, Gamepad operator) { return driver.a && driver.b; }
 }
