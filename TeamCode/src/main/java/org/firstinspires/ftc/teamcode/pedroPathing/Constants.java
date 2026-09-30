@@ -44,8 +44,12 @@ public class Constants {
             .yVelocity(52.3); // TODO: from Strafe Velocity tuner
 
     public static PinpointConstants localizerConstants = new PinpointConstants()
-            .forwardPodY(1.0)  // TODO: measure once pods are mounted (see pod offset guidance)
-            .strafePodX(-2.5)
+            // Offsets are from the tracking point O (frame centreline x midway between the axle lines), in inches.
+            // forwardPodY: sideways offset of the FORWARD pod wheel, LEFT of centre positive.
+            // strafePodX:  fore/aft offset of the STRAFE pod wheel, FORWARD of centre positive.
+            // PLANNED values (pods near the axes through O, see docs/ODOMETRY.md): tape-measure and replace once mounted.
+            .forwardPodY(0.0)
+            .strafePodX(0.0)
             .hardwareMapName("pinpoint") // I2C port 1, 2, or 3 on the Driver Station config — never port 0
             .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)
             .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD);
