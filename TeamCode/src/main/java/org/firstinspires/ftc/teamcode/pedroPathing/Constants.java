@@ -47,9 +47,9 @@ public class Constants {
     // Two goBILDA dead wheels + the Control Hub IMU (no Pinpoint). Pod encoders plug into REV hub encoder
     // ports; heading comes from the hub IMU. See docs/ODOMETRY.md for placement, wiring and verification.
     public static TwoWheelConstants localizerConstants = new TwoWheelConstants()
-            // TODO(wiring): motor-config name of the port each pod's encoder is plugged into. Use ports whose
-            // motor does not need its own encoder (drive motors, intake), never the shooter.
-            .forwardEncoder_HardwareMapName("lf")
+            // Each pod's encoder plugs into the encoder connector of the Control Hub port of this motor
+            // (see docs/HARDWARE_CONFIG.md). rf/rb are drive motors that don't need their own encoders.
+            .forwardEncoder_HardwareMapName("rf")
             .strafeEncoder_HardwareMapName("rb")
             .IMU_HardwareMapName("imu")
             // TODO: must match how the Control Hub is mounted on the robot.
@@ -62,8 +62,8 @@ public class Constants {
             // PLANNED values (pods near the axes through O): tape-measure and replace once mounted.
             .forwardPodY(0.0)
             .strafePodX(0.0)
-            // TODO: inches per encoder tick. Estimates from 2000 ticks/rev: 4-bar pod (32 mm wheel) 0.001979,
-            // swingarm pod (48 mm wheel) 0.002968. Refine with Pedro's Forward/Lateral tuners.
+            // TODO: inches per encoder tick. Estimate for the goBILDA 4-bar pod (32 mm wheel, 2000 ticks/rev);
+            // refine with Pedro's Forward/Lateral tuners.
             .forwardTicksToInches(0.001979)
             .strafeTicksToInches(0.001979)
             // TODO: flip a direction if its pod counts down when the robot moves forward (forward pod)

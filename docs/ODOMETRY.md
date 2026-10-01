@@ -59,16 +59,13 @@ convention. The spin-in-place test below confirms it on the real robot.
 
 `Constants.java` also needs (all marked TODO there):
 
-- **Encoder ports:** `forwardEncoder_HardwareMapName` / `strafeEncoder_HardwareMapName` are the *motor-config names*
-  of the ports the pod cables plug into. The code drives 8 motors (4 drive, 2 intake, 2 shooter) and a REV hub has 4 motor ports, so
-  the pods will likely have to share ports with motors that don't need an encoder: a drive motor or an intake motor, **never the shooter**.
-  The placeholders are `lf` and `rb`.
-- **Health monitor caveat:** `RobotHealthMonitor` reads every motor's velocity. On a port shared with a pod, that
-  reading is the pod's, so its stall check there (power applied, velocity about 0) can misfire or be masked.
+- **Encoder ports:** the forward pod goes on the `rf` port and the strafe pod on the `rb` port. The wiring chart
+  and reasoning are in `HARDWARE_CONFIG.md`.
+- **Health monitor caveat:** `RobotHealthMonitor` reads every motor's velocity, so ignore stall warnings on `rf` and `rb`.
 - **IMU:** name `imu`, and the orientation must match how the Control Hub is mounted (logo and USB direction).
   Mount the hub flat and rigid.
-- **Ticks to inches:** placeholder 0.001979 in/tick, from 2000 ticks/rev on a 32 mm wheel (4-bar pod).
-  Swingarm pod (48 mm wheel) is about 0.002968. Refine with Pedro's Forward and Lateral tuners.
+- **Ticks to inches:** placeholder 0.001979 in/tick, from 2000 ticks/rev on the 4-bar pod's 32 mm wheel.
+  Refine with Pedro's Forward and Lateral tuners.
 - **Encoder directions:** see Verify.
 
 ## Measure after mounting
@@ -102,9 +99,8 @@ convention. The spin-in-place test below confirms it on the real robot.
 
 ## Open items
 
-- **Which pod type?** goBILDA sells the swingarm pod (48 mm wheel) and the 4-bar pod (32 mm wheel). This sets
-  `forwardTicksToInches` / `strafeTicksToInches`.
-- **Which hub ports** the pods plug into, and how the Control Hub is mounted (IMU orientation).
+- **Hub mounting.** The Control Hub's IMU orientation (logo and USB direction) in `Constants.java` must match how
+  the hub is mounted. Pod type is the goBILDA 4-bar (32 mm wheel); hub ports are in `HARDWARE_CONFIG.md`.
 - **Not compile-checked.** I could not download Pedro 2.1.2 here. The two-wheel localizer calls
   (`TwoWheelConstants`, `Encoder`, `.twoWheelLocalizer(...)`) follow Pedro's documented API. If Android Studio
   flags any of them, its autocomplete on `TwoWheelConstants` shows the 2.1.2 names. Newer Pedro releases dropped the
