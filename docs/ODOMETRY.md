@@ -65,7 +65,7 @@ convention. The spin-in-place test below confirms it on the real robot.
 - **IMU:** name `imu`, and the orientation must match how the Control Hub is mounted (logo and USB direction).
   Mount the hub flat and rigid.
 - **Ticks to inches:** placeholder 0.001979 in/tick, from 2000 ticks/rev on the 4-bar pod's 32 mm wheel.
-  Refine with Pedro's Forward and Lateral tuners.
+  Refine with the push test in the "Odometry Test (push by hand)" OpMode (see `HARDWARE_CONFIG.md`).
 - **Encoder directions:** see Verify.
 
 ## Measure after mounting
@@ -89,7 +89,7 @@ convention. The spin-in-place test below confirms it on the real robot.
 
 ## Verify
 
-- Encoder directions: run Pedro's Localization Test. Push the robot forward by hand and x must rise. Push it
+- Encoder directions: use the "Odometry Test (push by hand)" OpMode. Push the robot forward by hand and x must rise. Push it
   left and y must rise. Flip `forwardEncoderDirection` / `strafeEncoderDirection` in `Constants.java` if not.
 - Heading: turn the robot left (counter-clockwise from above) and heading must increase. If it doesn't, the
   Control Hub orientation in `Constants.java` is wrong.

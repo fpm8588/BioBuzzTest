@@ -60,12 +60,18 @@ devices to the config from the table below.
 
 Eight motors need an Expansion Hub as well.
 
-## Check it works
+## Check it works (OpMode "Odometry Test (push by hand)", group Odometry)
 
-1. Open the Pedro **Localization Test**. Push the robot forward by hand: x must rise. Push it left: y must rise.
-   If one is backwards, flip that pod in `Constants.java` (`forwardEncoderDirection` /
-   `strafeEncoderDirection`, `Encoder.FORWARD` or `Encoder.REVERSE`).
+This repo has no Pedro tuner OpModes, so use this one. It floats the drive wheels so you can push the robot by
+hand, and shows Pedro's pose beside the raw pod counts. Press **A** to zero before each test.
+
+1. Push the robot forward: x must rise. Push it left: y must rise. If one is backwards, flip that pod in
+   `Constants.java` (`forwardEncoderDirection` / `strafeEncoderDirection`, `Encoder.FORWARD` or `Encoder.REVERSE`).
 2. Turn the robot left (counter-clockwise from above): heading must increase. If not, fix the IMU orientation in
    `Constants.java` to match how the Control Hub is mounted.
 3. Spin the robot in place: x and y should hardly move. If they trace a circle, an offset is wrong. See
    `ODOMETRY.md`.
+4. Ticks to inches: mark out a known distance (for example 48 in), push the robot along it, and read the suggested
+   `ticksToInches` on screen. Set it in `Constants.java` for that pod. Use D-pad up/down if your distance isn't 48.
+
+Competition TeleOp and Competition Auto also run in this build (drive only).
