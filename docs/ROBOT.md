@@ -11,3 +11,5 @@ Read these before writing OpModes so you know each subsystem's hardware, config 
 | [Shooter](subsystems\Shooter.md) | <!-- @ftc-toolchain generated: subsystem-doc — scaffolded; team edits expected --> |
 | [Sorter](subsystems\Sorter.md) | <!-- @ftc-toolchain generated: subsystem-doc — scaffolded; team edits expected --> |
 | [RobotHealthMonitor](subsystems\RobotHealthMonitor.md) | Live power/health dashboard + field position, hosted via Panels |
+
+See also: [Odometry / dead-wheel placement](ODOMETRY.md)
