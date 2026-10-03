@@ -60,12 +60,26 @@ devices to the config from the table below.
 
 Eight motors need an Expansion Hub as well.
 
-## Check it works
+## Check it works (Pedro's own tuners)
 
-1. Open the Pedro **Localization Test**. Push the robot forward by hand: x must rise. Push it left: y must rise.
-   If one is backwards, flip that pod in `Constants.java` (`forwardEncoderDirection` /
-   `strafeEncoderDirection`, `Encoder.FORWARD` or `Encoder.REVERSE`).
-2. Turn the robot left (counter-clockwise from above): heading must increase. If not, fix the IMU orientation in
-   `Constants.java` to match how the Control Hub is mounted.
-3. Spin the robot in place: x and y should hardly move. If they trace a circle, an offset is wrong. See
-   `ODOMETRY.md`.
+This build uses Pedro's standard `Constants.createFollower(hardwareMap)`, so Pedro's tuning OpModes work with it
+unchanged: Localization Test, Forward / Lateral / Turn tuners (these also give the dead-wheel ticks-to-inches),
+the velocity and zero-power-acceleration tuners, and the PID tests.
+
+**They are not in this repo yet.** Pedro ships them in its Quickstart project as `Tuning.java` (in the
+`pedroPathing` package). Copy that file from a Quickstart whose version matches `com.pedropathing:ftc:2.1.2`
+(see `build.dependencies.gradle`) into `TeamCode/.../pedroPathing/`. If the Quickstart you grab is for a newer Pedro
+(3.x), its tuner code won't match 2.1.2: use the Quickstart release for 2.x, or upgrade the dependency and adjust
+`Constants.java` together.
+
+Then run them in this order (full guide: https://pedropathing.com/docs/pathing/tuning):
+
+1. **Localization Test:** push the robot forward and x must rise. Push it left and y must rise. Turn it left
+   (counter-clockwise from above) and heading must increase. If a pod counts backwards, flip its `Encoder`
+   direction in `Constants.java`. If heading is backwards, fix the IMU orientation there.
+2. Spin the robot in place: x and y should hardly move. If they trace a circle, an offset is wrong.
+   See `ODOMETRY.md`.
+3. **Forward Tuner** and **Lateral Tuner:** set `forwardTicksToInches` / `strafeTicksToInches`.
+4. **Turn Tuner**, then the velocity, zero-power-acceleration and PID tuners.
+
+Competition TeleOp and Competition Auto also run in this build (drive only).
