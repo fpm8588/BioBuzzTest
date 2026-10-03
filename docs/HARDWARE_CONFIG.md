@@ -62,23 +62,26 @@ Eight motors need an Expansion Hub as well.
 
 ## Check it works (Pedro's own tuners)
 
-This build uses Pedro's standard `Constants.createFollower(hardwareMap)`, so Pedro's tuning OpModes work with it
-unchanged: Localization Test, Forward / Lateral / Turn tuners (these also give the dead-wheel ticks-to-inches),
-the velocity and zero-power-acceleration tuners, and the PID tests.
+Pedro's tuning menu is in the project: `TeamCode/.../pedroPathing/Tuning.java`, copied unchanged from the
+official Pedro Quickstart at its last commit for `com.pedropathing:ftc:2.1.2` (commit `4d160da`). On the Driver Hub
+pick the **Tuning** OpMode (group "Pedro Pathing"). It opens a menu:
 
-**They are not in this repo yet.** Pedro ships them in its Quickstart project as `Tuning.java` (in the
-`pedroPathing` package). Copy that file from a Quickstart whose version matches `com.pedropathing:ftc:2.1.2`
-(see `build.dependencies.gradle`) into `TeamCode/.../pedroPathing/`. If the Quickstart you grab is for a newer Pedro
-(3.x), its tuner code won't match 2.1.2: use the Quickstart release for 2.x, or upgrade the dependency and adjust
-`Constants.java` together.
+- **Localization:** Localization Test, Offsets Tuner, Forward Tuner, Lateral Tuner, Turn Tuner
+- **Automatic:** Forward / Lateral Velocity, Forward / Lateral Zero Power Acceleration, Predictive Braking
+- **Manual:** Translational, Heading, Drive, Centripetal
+- **Tests:** Line, Triangle, Circle
 
-Then run them in this order (full guide: https://pedropathing.com/docs/pathing/tuning):
+It also shows live data on the Panels dashboard (connect to the robot's wifi, then open `192.168.43.1:8001`).
+It builds the robot through `Constants.createFollower(hardwareMap)`, so it uses the drive motors, dead wheels and
+IMU configured here and nothing else.
 
-1. **Localization Test:** push the robot forward and x must rise. Push it left and y must rise. Turn it left
-   (counter-clockwise from above) and heading must increase. If a pod counts backwards, flip its `Encoder`
-   direction in `Constants.java`. If heading is backwards, fix the IMU orientation there.
-2. Spin the robot in place: x and y should hardly move. If they trace a circle, an offset is wrong.
-   See `ODOMETRY.md`.
+Run them in this order (full guide: https://pedropathing.com/docs/pathing/tuning):
+
+1. **Localization Test:** drive or push the robot. Forward must raise x, left must raise y, and turning left
+   (counter-clockwise from above) must raise heading. If a pod counts backwards, flip its `Encoder` direction in
+   `Constants.java`. If heading is backwards, fix the IMU orientation there.
+2. Spin the robot in place: x and y should hardly move. If they trace a circle, an offset is wrong
+   (Offsets Tuner can measure them; see `ODOMETRY.md`).
 3. **Forward Tuner** and **Lateral Tuner:** set `forwardTicksToInches` / `strafeTicksToInches`.
 4. **Turn Tuner**, then the velocity, zero-power-acceleration and PID tuners.
 
