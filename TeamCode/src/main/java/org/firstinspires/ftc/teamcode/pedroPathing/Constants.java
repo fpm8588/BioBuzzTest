@@ -67,10 +67,10 @@ public class Constants {
             // Strafe: Lateral Tuner, average of 3 runs (0.0019752, 0.0019754, 0.0019753; the tuner showed them negative).
             .forwardTicksToInches(0.0019695)
             .strafeTicksToInches(0.0019753)
-            // Forward pod flipped (x was reversed in the Localization Test). Strafe pod flipped because the Lateral Tuner
-            // read negative when pushing left. TODO: confirm in the Localization Test (push left: y must rise).
+            // Forward pod flipped (x was reversed in the Localization Test). Strafe pod is not flipped: the Lateral Tuner read
+            // negative only because the robot was pushed right. TODO: confirm in the Localization Test (push left: y must rise).
             .forwardEncoderDirection(Encoder.REVERSE)
-            .strafeEncoderDirection(Encoder.REVERSE);
+            .strafeEncoderDirection(Encoder.FORWARD);
 
     public static PathConstraints pathConstraints = new PathConstraints(
             0.995, 0.1, 0.1, 0.009, 50, 1.25, 10, 1);
