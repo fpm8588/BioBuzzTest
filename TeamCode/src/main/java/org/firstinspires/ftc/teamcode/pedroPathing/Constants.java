@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.pedroPathing;
 
 import com.pedropathing.control.FilteredPIDFCoefficients;
 import com.pedropathing.control.PIDFCoefficients;
+import com.pedropathing.control.PredictiveBrakingCoefficients;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.follower.FollowerConstants;
 import com.pedropathing.ftc.FollowerBuilder;
@@ -30,7 +31,11 @@ public class Constants {
             .translationalPIDFCoefficients(new PIDFCoefficients(0.1, 0, 0.01, 0.015))
             .headingPIDFCoefficients(new PIDFCoefficients(1.0, 0, 0.05, 0.01))
             .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.025, 0, 0.00001, 0.6, 0.01))
-            .centripetalScaling(0.0005);
+            // Predictive braking (replaces the translational and drive PIDFs): (kP, kLinearBraking, kQuadraticFriction).
+            // kLinear 0.05897 and kQuadratic 0.0014921 are from the Predictive Braking Tuner. kP 0.1 is the starting
+            // value; tune it in the Line test (typically 0.05 to 0.3).
+            .predictiveBrakingCoefficients(new PredictiveBrakingCoefficients(0.1, 0.05897, 0.0014921))
+            .centripetalScaling(0); // off: predictive braking handles it
 
     public static MecanumConstants driveConstants = new MecanumConstants()
             .leftFrontMotorName("lf")   // matches team's existing Driver Station config names
@@ -73,7 +78,7 @@ public class Constants {
             .strafeEncoderDirection(Encoder.FORWARD);
 
     public static PathConstraints pathConstraints = new PathConstraints(
-            0.995, 0.1, 0.1, 0.009, 50, 1.25, 10, 1);
+            0.97, 0.1, 0.1, 0.009, 50, 1.25, 10, 1); // 0.97 = parametric end constraint, lowered for predictive braking (keep >= 0.9)
 
     public static Follower createFollower(HardwareMap hardwareMap) {
         return new FollowerBuilder(followerConstants, hardwareMap)
