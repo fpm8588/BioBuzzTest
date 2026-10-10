@@ -63,9 +63,10 @@ public class Constants {
             // Re-run the Offsets Tuner after the other subsystems are mounted (the center of rotation moves).
             .forwardPodY(0.185)
             .strafePodX(0.199)
-            // TODO: inches per encoder tick. Estimate for the goBILDA 4-bar pod (32 mm wheel, 2000 ticks/rev);
-            // refine with Pedro's Forward/Lateral tuners.
-            .forwardTicksToInches(0.001979)
+            // Inches per encoder tick. Forward: from the Forward Tuner (one run; average a few more).
+            // Strafe: TODO, still the estimate for the goBILDA 4-bar pod (32 mm wheel, 2000 ticks/rev);
+            // replace it with the Lateral Tuner result.
+            .forwardTicksToInches(0.0019672)
             .strafeTicksToInches(0.001979)
             // Directions found with the Localization Test: x was reversed, so the forward pod is flipped.
             // TODO: confirm the strafe pod too (moving left must raise y); flip it if not.
