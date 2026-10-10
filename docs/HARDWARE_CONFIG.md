@@ -37,7 +37,11 @@ motor type you actually have.
 1. Unplug the drive motors' own encoder cables from encoder ports 2 and 3. Pedro's mecanum drive doesn't use them.
    Leave ports 0 and 1 alone.
 2. Plug each pod's cable into the encoder connector of its port. The motor power wires stay on the same port.
-3. `rf` and `rb` are the two drive motors with direction FORWARD, so the SDK doesn't flip their encoder sign.
+3. Why a drive-motor port: the pods have no motor of their own, so each shares a drive motor's encoder connector.
+   Pedro's encoder wrapper accounts for the motor's configured direction itself, so which motor you share with
+   does not change the pod's direction logic. Flip a pod with `Encoder.REVERSE` if the Localization Test says so.
+   Pedro's two-wheel docs say REV encoder ports **0 and 3** are the fastest and recommend them for both pods.
+   Optional: move the forward pod to port 0 (`lf`) and set `forwardEncoder_HardwareMapName("lf")`.
 4. Not checked from here: the pod cable's pinout and supply voltage against a REV encoder port. Confirm in the
    goBILDA pod manual before powering up.
 5. `RobotHealthMonitor` reads velocity on every motor, so on `rf` and `rb` it reports the pod's velocity.
@@ -60,29 +64,15 @@ devices to the config from the table below.
 
 Eight motors need an Expansion Hub as well.
 
-## Check it works (Pedro's own tuners)
+## Check it works and tune
 
-Pedro's tuning menu is in the project: `TeamCode/.../pedroPathing/Tuning.java`, copied unchanged from the
-official Pedro Quickstart at its last commit for `com.pedropathing:ftc:2.1.2` (commit `4d160da`). On the Driver Hub
-pick the **Tuning** OpMode (group "Pedro Pathing"). It opens a menu:
+Pedro's tuning menu is in the project: `TeamCode/.../pedroPathing/Tuning.java`, copied unchanged from the official
+Pedro Quickstart at its last commit for `com.pedropathing:ftc:2.1.2` (commit `4d160da`). On the Driver Hub pick the
+**Tuning** OpMode (group "Pedro Pathing"). It builds the robot through `Constants.createFollower(hardwareMap)`, so it
+uses the drive motors, dead wheels and IMU configured here and nothing else.
 
-- **Localization:** Localization Test, Offsets Tuner, Forward Tuner, Lateral Tuner, Turn Tuner
-- **Automatic:** Forward / Lateral Velocity, Forward / Lateral Zero Power Acceleration, Predictive Braking
-- **Manual:** Translational, Heading, Drive, Centripetal
-- **Tests:** Line, Triangle, Circle
+Menu: Localization (Localization Test, Offsets Tuner, Forward / Lateral / Turn tuners), Automatic (velocity,
+zero-power acceleration, Predictive Braking), Manual (Translational, Heading, Drive, Centripetal), Tests (Line,
+Triangle, Circle). The Turn Tuner isn't needed with this two-wheel + IMU setup.
 
-It also shows live data on the Panels dashboard (connect to the robot's wifi, then open `192.168.43.1:8001`).
-It builds the robot through `Constants.createFollower(hardwareMap)`, so it uses the drive motors, dead wheels and
-IMU configured here and nothing else.
-
-Run them in this order (full guide: https://pedropathing.com/docs/pathing/tuning):
-
-1. **Localization Test:** drive or push the robot. Forward must raise x, left must raise y, and turning left
-   (counter-clockwise from above) must raise heading. If a pod counts backwards, flip its `Encoder` direction in
-   `Constants.java`. If heading is backwards, fix the IMU orientation there.
-2. Spin the robot in place: x and y should hardly move. If they trace a circle, an offset is wrong
-   (Offsets Tuner can measure them; see `ODOMETRY.md`).
-3. **Forward Tuner** and **Lateral Tuner:** set `forwardTicksToInches` / `strafeTicksToInches`.
-4. **Turn Tuner**, then the velocity, zero-power-acceleration and PID tuners.
-
-Competition TeleOp and Competition Auto also run in this build (drive only).
+**Full step-by-step guide: `TUNING.md`.** Competition TeleOp and Competition Auto also run in this build (drive only).
