@@ -64,14 +64,13 @@ public class Constants {
             .forwardPodY(0.185)
             .strafePodX(0.199)
             // Inches per encoder tick. Forward: Forward Tuner, average of 3 runs (0.0019672, 0.0019724, 0.0019688).
-            // Strafe: TODO, still the estimate for the goBILDA 4-bar pod (32 mm wheel, 2000 ticks/rev);
-            // replace it with the Lateral Tuner result.
+            // Strafe: Lateral Tuner, average of 3 runs (0.0019752, 0.0019754, 0.0019753; the tuner showed them negative).
             .forwardTicksToInches(0.0019695)
-            .strafeTicksToInches(0.001979)
-            // Directions found with the Localization Test: x was reversed, so the forward pod is flipped.
-            // TODO: confirm the strafe pod too (moving left must raise y); flip it if not.
+            .strafeTicksToInches(0.0019753)
+            // Forward pod flipped (x was reversed in the Localization Test). Strafe pod flipped because the Lateral Tuner
+            // read negative when pushing left. TODO: confirm in the Localization Test (push left: y must rise).
             .forwardEncoderDirection(Encoder.REVERSE)
-            .strafeEncoderDirection(Encoder.FORWARD);
+            .strafeEncoderDirection(Encoder.REVERSE);
 
     public static PathConstraints pathConstraints = new PathConstraints(
             0.995, 0.1, 0.1, 0.009, 50, 1.25, 10, 1);
