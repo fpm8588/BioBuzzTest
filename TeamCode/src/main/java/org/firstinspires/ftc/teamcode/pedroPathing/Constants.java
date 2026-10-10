@@ -56,12 +56,13 @@ public class Constants {
             .IMU_Orientation(new RevHubOrientationOnRobot(
                     RevHubOrientationOnRobot.LogoFacingDirection.FORWARD,
                     RevHubOrientationOnRobot.UsbFacingDirection.UP))
-            // Offsets are from the tracking point O (frame centreline x midway between the axle lines), in inches.
+            // Offsets in inches from the robot's center of rotation.
             // forwardPodY: sideways offset of the FORWARD pod wheel, LEFT of centre positive.
             // strafePodX:  fore/aft offset of the STRAFE pod wheel, FORWARD of centre positive.
-            // PLANNED values (pods near the axes through O): tape-measure and replace once mounted.
-            .forwardPodY(0.0)
-            .strafePodX(0.0)
+            // From the Offsets Tuner, average of 3 runs: forwardY 0.4168, 0.1921, -0.0543; strafeX 0.1711, 0.2964, 0.1304.
+            // Re-run the Offsets Tuner after the other subsystems are mounted (the center of rotation moves).
+            .forwardPodY(0.185)
+            .strafePodX(0.199)
             // TODO: inches per encoder tick. Estimate for the goBILDA 4-bar pod (32 mm wheel, 2000 ticks/rev);
             // refine with Pedro's Forward/Lateral tuners.
             .forwardTicksToInches(0.001979)
