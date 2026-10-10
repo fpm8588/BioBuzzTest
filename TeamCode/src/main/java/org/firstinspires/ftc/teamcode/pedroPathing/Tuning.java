@@ -231,17 +231,6 @@ class ForwardTuner extends OpMode {
     }
 
     /**
-     * Local fix: zero at START. This tuner's wait screen never updates the localizer, so any movement made
-     * between selecting the tuner and pressing START would otherwise show up all at once on the first loop.
-     * setPose also re-zeroes the encoders.
-     */
-    @Override
-    public void start() {
-        follower.setPose(new Pose(72,72));
-        follower.update();
-    }
-
-    /**
      * This updates the robot's pose estimate, and updates the Panels telemetry with the
      * calculated multiplier and draws the robot.
      */
@@ -287,17 +276,6 @@ class LateralTuner extends OpMode {
         telemetryM.debug("Pull your robot to the right " + DISTANCE + " inches. Your strafe ticks to inches will be shown on the telemetry.");
         telemetryM.update(telemetry);
         drawCurrent();
-    }
-
-    /**
-     * Local fix: zero at START. This tuner's wait screen never updates the localizer, so any movement made
-     * between selecting the tuner and pressing START would otherwise show up all at once on the first loop.
-     * setPose also re-zeroes the encoders.
-     */
-    @Override
-    public void start() {
-        follower.setPose(new Pose(72,72));
-        follower.update();
     }
 
     /**
@@ -1648,17 +1626,6 @@ class OffsetsTuner extends OpMode {
         telemetryM.update(telemetry);
 
         drawCurrent();
-    }
-
-    /**
-     * Local fix: zero at START. This tuner's wait screen never updates the localizer, so any movement made
-     * between selecting the tuner and pressing START would otherwise show up all at once on the first loop.
-     * setPose also re-zeroes the encoders.
-     */
-    @Override
-    public void start() {
-        follower.setPose(new Pose(72,72));
-        follower.update();
     }
 
     /**

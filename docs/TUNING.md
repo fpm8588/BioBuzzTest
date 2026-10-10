@@ -102,10 +102,6 @@ Re-run this after the other subsystems are mounted, because the robot's center o
 > multiplier came out far too small (it reads about 120 after a 48 in push instead of 48). Pedro had this right in
 > commit `dbaffc0` and broke it again in `4c55679`. This project's `Tuning.java` subtracts the 72. If you ever replace
 > the file with a fresh copy, re-apply that. **"Distance Moved" must read about 48 after a 48 in push.**
->
-> **Second local fix:** the Forward, Lateral and Offsets tuners now zero themselves when you press START. Their wait
-> screen never updated the localizer, so any movement made while positioning the robot after selecting the tuner
-> (for example 18 inches) appeared as a jump on the first loop. **"Distance Moved" must read about 0 right after START.**
 
 1. Mark 48 inches (2 tiles) on the floor in a straight line.
 2. START it, then **push the robot forward exactly 48 inches** by hand.
