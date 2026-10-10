@@ -97,6 +97,12 @@ Re-run this after the other subsystems are mounted, because the robot's center o
 (You can also tape-measure the offsets; see `ODOMETRY.md`. Left of center is +y, forward of center is +x.)
 
 ### 2c. Forward Tuner (Tuning > Localization > Forward Tuner)
+> **Known upstream bug, fixed in this project.** The Quickstart's `Tuning.java` for Pedro 2.1.2 starts the Forward and
+> Lateral tuners at pose (72, 72) but divided by the absolute x or y, so "Distance Moved" read 72 too high and the
+> multiplier came out far too small (it reads about 120 after a 48 in push instead of 48). Pedro had this right in
+> commit `dbaffc0` and broke it again in `4c55679`. This project's `Tuning.java` subtracts the 72. If you ever replace
+> the file with a fresh copy, re-apply that. **"Distance Moved" must read about 48 after a 48 in push.**
+
 1. Mark 48 inches (2 tiles) on the floor in a straight line.
 2. START it, then **push the robot forward exactly 48 inches** by hand.
 3. Read **Multiplier**. That number is the value to use. Paste it:

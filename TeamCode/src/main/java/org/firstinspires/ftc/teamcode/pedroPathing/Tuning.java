@@ -210,6 +210,8 @@ class LocalizationTest extends OpMode {
  * @author Baron Henderson - 20077 The Indubitables
  * @version 1.0, 5/6/2024
  */
+// Local fix: the tuner starts at (72, 72), so distance moved is x - 72. Upstream Quickstart commit 4c55679 dropped
+// this subtraction by mistake (it was correct in dbaffc0). Same fix applied in LateralTuner (y - 72).
 class ForwardTuner extends OpMode {
     public static double DISTANCE = 48;
 
@@ -236,9 +238,9 @@ class ForwardTuner extends OpMode {
     public void loop() {
         follower.update();
 
-        telemetryM.debug("Distance Moved: " + follower.getPose().getX());
+        telemetryM.debug("Distance Moved: " + (follower.getPose().getX() - 72));
         telemetryM.debug("The multiplier will display what your forward ticks to inches should be to scale your current distance to " + DISTANCE + " inches.");
-        telemetryM.debug("Multiplier: " + (DISTANCE / (follower.getPose().getX() / follower.getPoseTracker().getLocalizer().getForwardMultiplier())));
+        telemetryM.debug("Multiplier: " + (DISTANCE / ((follower.getPose().getX() - 72) / follower.getPoseTracker().getLocalizer().getForwardMultiplier())));
         telemetryM.update(telemetry);
 
         drawCurrentAndHistory();
@@ -284,9 +286,9 @@ class LateralTuner extends OpMode {
     public void loop() {
         follower.update();
 
-        telemetryM.debug("Distance Moved: " + follower.getPose().getY());
+        telemetryM.debug("Distance Moved: " + (follower.getPose().getY() - 72));
         telemetryM.debug("The multiplier will display what your strafe ticks to inches should be to scale your current distance to " + DISTANCE + " inches.");
-        telemetryM.debug("Multiplier: " + (DISTANCE / (follower.getPose().getY() / follower.getPoseTracker().getLocalizer().getLateralMultiplier())));
+        telemetryM.debug("Multiplier: " + (DISTANCE / ((follower.getPose().getY() - 72) / follower.getPoseTracker().getLocalizer().getLateralMultiplier())));
         telemetryM.update(telemetry);
 
         drawCurrentAndHistory();
