@@ -52,10 +52,10 @@ public class Constants {
             .forwardEncoder_HardwareMapName("rf")
             .strafeEncoder_HardwareMapName("rb")
             .IMU_HardwareMapName("imu")
-            // TODO: must match how the Control Hub is mounted on the robot.
+            // Control Hub mounted with the REV logo facing the robot's front and the USB port facing up.
             .IMU_Orientation(new RevHubOrientationOnRobot(
-                    RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                    RevHubOrientationOnRobot.UsbFacingDirection.LEFT))
+                    RevHubOrientationOnRobot.LogoFacingDirection.FORWARD,
+                    RevHubOrientationOnRobot.UsbFacingDirection.UP))
             // Offsets are from the tracking point O (frame centreline x midway between the axle lines), in inches.
             // forwardPodY: sideways offset of the FORWARD pod wheel, LEFT of centre positive.
             // strafePodX:  fore/aft offset of the STRAFE pod wheel, FORWARD of centre positive.
@@ -66,9 +66,9 @@ public class Constants {
             // refine with Pedro's Forward/Lateral tuners.
             .forwardTicksToInches(0.001979)
             .strafeTicksToInches(0.001979)
-            // TODO: flip a direction if its pod counts down when the robot moves forward (forward pod)
-            // or left (strafe pod).
-            .forwardEncoderDirection(Encoder.FORWARD)
+            // Directions found with the Localization Test: x was reversed, so the forward pod is flipped.
+            // TODO: confirm the strafe pod too (moving left must raise y); flip it if not.
+            .forwardEncoderDirection(Encoder.REVERSE)
             .strafeEncoderDirection(Encoder.FORWARD);
 
     public static PathConstraints pathConstraints = new PathConstraints(
