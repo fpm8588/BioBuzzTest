@@ -32,9 +32,9 @@ public class Constants {
             .headingPIDFCoefficients(new PIDFCoefficients(1.0, 0, 0.05, 0.01))
             .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.025, 0, 0.00001, 0.6, 0.01))
             // Predictive braking (replaces the translational and drive PIDFs): (kP, kLinearBraking, kQuadraticFriction).
-            // kLinear 0.05897 and kQuadratic 0.0014921 are from the Predictive Braking Tuner. kP 0.1 is the starting
-            // value; tune it in the Line test (typically 0.05 to 0.3).
-            .predictiveBrakingCoefficients(new PredictiveBrakingCoefficients(0.1, 0.05897, 0.0014921))
+            // kLinear 0.05897 and kQuadratic 0.0014921 are from the Predictive Braking Tuner. kP 1.0 was found best in the
+            // Line test (Pedro's docs call 0.05 to 0.3 typical, so watch for jitter if weight or battery changes).
+            .predictiveBrakingCoefficients(new PredictiveBrakingCoefficients(1.0, 0.05897, 0.0014921))
             .centripetalScaling(0); // off: predictive braking handles it
 
     public static MecanumConstants driveConstants = new MecanumConstants()
