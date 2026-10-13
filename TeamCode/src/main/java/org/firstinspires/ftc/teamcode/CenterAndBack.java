@@ -38,6 +38,15 @@ public class CenterAndBack extends LinearOpMode {
     public static double TURN_KP = 0.2;
 
     /**
+     * After the last move, false = stop and let go (no shaking; the robot has already braked to a stop), true =
+     * keep actively holding the final spot using HOLD_KP.
+     */
+    public static boolean HOLD_FINAL_POSITION = false;
+
+    /** Position-hold gain used while holding the final spot (only when HOLD_FINAL_POSITION is true). */
+    public static double HOLD_KP = 0.2;
+
+    /**
      * Motor power cap (0 to 1) while turning in place. A full-power 180 degree turn overshoots and oscillates with
      * a heading PIDF that was tuned on small turns, so the turn is slowed down. Lower = slower and steadier.
      */
@@ -127,6 +136,13 @@ public class CenterAndBack extends LinearOpMode {
                         break;
                     case BACK_TO_EDGE:
                         if (!follower.isBusy()) {
+                            if (HOLD_FINAL_POSITION) {
+                                // Keep correcting the final spot, but with a gentle gain so it doesn't shake.
+                                braking.P = Math.max(0.02, Math.min(driveKp, HOLD_KP));
+                            } else {
+                                // Already stopped: release the motors so nothing keeps correcting (and shaking).
+                                follower.breakFollowing();
+                            }
                             state = State.DONE;
                         }
                         break;
