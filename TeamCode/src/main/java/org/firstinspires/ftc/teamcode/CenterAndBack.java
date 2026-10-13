@@ -13,6 +13,7 @@ import org.firstinspires.ftc.teamcode.util.Drawing;
 
 /*
  * Drives from the edge of the ring to the middle, turns 180 degrees in place, and drives back to the edge.
+ * The turn is done as two 90 degree steps at reduced power so it stays steady (see TURN_MAX_POWER).
  *
  * Setup: put the robot at the edge of the ring, facing the middle, then press INIT and START.
  * The robot keeps the pose it has at INIT as its start, so no field coordinates need to match anything real.
@@ -27,6 +28,12 @@ public class CenterAndBack extends LinearOpMode {
     /** Distance from the edge of the ring to the middle, in inches. CHANGE THIS to match your ring. */
     public static double DISTANCE_TO_CENTER_IN = 24.0;
 
+    /**
+     * Motor power cap (0 to 1) while turning in place. A full-power 180 degree turn overshoots and oscillates with
+     * a heading PIDF that was tuned on small turns, so the turn is slowed down. Lower = slower and steadier.
+     */
+    public static double TURN_MAX_POWER = 0.5;
+
     // Safety limits on the distance above, in inches.
     private static final double MIN_DISTANCE_IN = 1.0;
     private static final double MAX_DISTANCE_IN = 72.0;
@@ -35,7 +42,7 @@ public class CenterAndBack extends LinearOpMode {
     private static final double START_X = 24.0;
     private static final double START_Y = 72.0;
 
-    private enum State { TO_CENTER, TURN_AROUND, BACK_TO_EDGE, DONE }
+    private enum State { TO_CENTER, TURN_TO_90, TURN_TO_180, BACK_TO_EDGE, DONE }
 
     @Override
     public void runOpMode() {
@@ -54,6 +61,7 @@ public class CenterAndBack extends LinearOpMode {
 
         // Read the distance now, after START, so a value changed in Panels during INIT is used.
         double distance = Math.max(MIN_DISTANCE_IN, Math.min(MAX_DISTANCE_IN, DISTANCE_TO_CENTER_IN));
+        double turnPower = Math.max(0.15, Math.min(1.0, TURN_MAX_POWER));
 
         Pose middle = new Pose(START_X + distance, START_Y, 0);
 
@@ -80,12 +88,22 @@ public class CenterAndBack extends LinearOpMode {
             switch (state) {
                 case TO_CENTER:
                     if (!follower.isBusy()) {
-                        follower.turn(Math.PI, true); // 180 degrees counter-clockwise (left), in place
-                        state = State.TURN_AROUND;
+                        follower.setMaxPower(turnPower);
+                        // Turn left in place, first to 90 degrees. Two steps avoid a single exact-180 turn, whose
+                        // direction is ambiguous (the heading error flips sign with a tiny bit of noise).
+                        follower.turnTo(Math.PI / 2);
+                        state = State.TURN_TO_90;
                     }
                     break;
-                case TURN_AROUND:
+                case TURN_TO_90:
                     if (!follower.isBusy()) {
+                        follower.turnTo(Math.PI);
+                        state = State.TURN_TO_180;
+                    }
+                    break;
+                case TURN_TO_180:
+                    if (!follower.isBusy()) {
+                        follower.setMaxPower(1.0); // full speed again for the drive back
                         follower.followPath(backToEdge, true);
                         state = State.BACK_TO_EDGE;
                     }
