@@ -32,9 +32,10 @@ public class Constants {
             .headingPIDFCoefficients(new PIDFCoefficients(1.0, 0, 0.05, 0.01))
             .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.025, 0, 0.00001, 0.6, 0.01))
             // Predictive braking (replaces the translational and drive PIDFs): (kP, kLinearBraking, kQuadraticFriction).
-            // kLinear 0.05897 and kQuadratic 0.0014921 are from the Predictive Braking Tuner. kP 1.0 was found best in the
-            // Line test (Pedro's docs call 0.05 to 0.3 typical, so watch for jitter if weight or battery changes).
-            .predictiveBrakingCoefficients(new PredictiveBrakingCoefficients(1.0, 0.05897, 0.0014921))
+            // kLinear 0.05897 and kQuadratic 0.0014921 are from the Predictive Braking Tuner (measured driving forward/back).
+            // kP was 1.0 (best straight-line in the Line test) but made the robot shake sideways when holding a point or
+            // turning, so it is 0.3 now (Pedro's docs call 0.05 to 0.3 typical). Re-check the Line test at this value.
+            .predictiveBrakingCoefficients(new PredictiveBrakingCoefficients(0.3, 0.05897, 0.0014921))
             .centripetalScaling(0); // off: predictive braking handles it
 
     public static MecanumConstants driveConstants = new MecanumConstants()
