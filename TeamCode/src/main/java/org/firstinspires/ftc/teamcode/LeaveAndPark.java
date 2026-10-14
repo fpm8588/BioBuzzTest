@@ -34,11 +34,25 @@ import org.firstinspires.ftc.teamcode.util.LeaveParkPlan;
  *     START_DELAY_SEC if you need to wait.
  * If any check fails, the robot does not move and the screen says why. If the robot ever leaves the plan, it stops.
  *
+ * Robot set-up rules (manual, "ROBOTS must be set up correctly on the FIELD") and how this OpMode handles each:
+ *   A. fully on its own alliance side (columns A, B, C = red, D, E, F = blue): checked by the plan. The side comes
+ *      from where the loading zone is, and the plan refuses a start that is not fully inside that half.
+ *   B. not attached to or hanging from a field element: you check this by eye.
+ *   C. touching the perimeter wall: the start pose puts the back edge exactly on the wall.
+ *   D. not touching or inside a FLOWER's scoring volume: the flowers are part of the HIVE structure in the middle,
+ *      far from the start. Check by eye; the plan also keeps clear of a keep-out area around the HIVE.
+ *   E. not in the LOADING ZONE: the start is beside the zone with START_GAP_IN (at least 1 in) of space.
+ *   F. inside the starting configuration (18 in cube): the plan refuses a robot size over 18 in. Height and any
+ *      parts that unfold are for you to check.
+ *   G. in contact with exactly 4 POLLEN pre-loads, on your own side: you do this. Do not put a pre-load between the
+ *      robot and the zone or in the robot's path (the robot drives away from the wall, toward the zone side).
+ *   H. fully motionless after INIT: the only motor command before START is zero power (from building the follower).
+ *
  * VERIFY BEFORE USE (see the numbers marked ASSUMED): the game manual could not be read from the build machine, so
- * the loading zone position, the start rules and the HIVE size came from search results, not the manual.
- * 1. Measure the LOADING ZONE tape on your field and fix ZONE_* (inches from the bottom-left corner).
- * 2. Read the starting rules in the manual (section 10, autonomous / robot start) and confirm the start spot is legal.
- * 3. Set ROBOT_LENGTH_IN / ROBOT_WIDTH_IN to the real chassis size in the start configuration.
+ * the loading zone position and the HIVE size came from search results, not the manual.
+ * 1. Measure the LOADING ZONE tape on your field and fix ZONE_* (inches from the bottom-left corner of your frame).
+ *    Per the manual's columns, the red zone is in column A and the blue zone in column F.
+ * 2. Set ROBOT_LENGTH_IN / ROBOT_WIDTH_IN to the real chassis size in the start configuration (at most 18 x 18).
  *
  * Setup: robot centred beside the zone as shown on the Driver Station, back edge flat against the wall, facing away
  * from the wall. The Driver Station prints the exact start and end poses at INIT.
@@ -56,7 +70,10 @@ public class LeaveAndPark extends LinearOpMode {
     public static double ZONE_X_MAX = 11.0;
     public static double ZONE_Y_MAX = 119.5;
 
-    /** false = use the zone rectangle as typed; true = turn it 180 degrees about the field centre (other alliance). */
+    /**
+     * false = use the zone rectangle as typed (the red zone, columns A-C, the x 0 to 72 half);
+     * true = turn it 180 degrees about the field centre (the blue zone, columns D-F, the x 72 to 144 half).
+     */
     public static boolean ROTATE_180 = false;
 
     /** Which side of the zone to start on along the wall: -1 or +1. Pick the side with more free space. */
@@ -66,7 +83,7 @@ public class LeaveAndPark extends LinearOpMode {
     public static double ROBOT_LENGTH_IN = 18.0; // front to back
     public static double ROBOT_WIDTH_IN = 18.0;  // side to side
 
-    /** Gap between the robot and the zone edge at the start, inches. */
+    /** Gap between the robot and the zone edge at the start, inches. At least 1: the robot must not be in the zone. */
     public static double START_GAP_IN = 2.0;
 
     /** How far the robot's back edge ends up from the wall. Must be above 0 for LEAVE; zone depth minus this is the overlap. */
@@ -117,7 +134,9 @@ public class LeaveAndPark extends LinearOpMode {
         telemetry.addData("START centre (x, y, heading)", "%.1f, %.1f, %.0f deg", plan.startX, plan.startY, Math.toDegrees(plan.heading));
         telemetry.addData("PARK  centre (x, y, heading)", "%.1f, %.1f, %.0f deg", plan.parkX, plan.parkY, Math.toDegrees(plan.heading));
         telemetry.addData("move length (in)", "%.1f", Math.hypot(plan.parkX - plan.startX, plan.parkY - plan.startY));
-        telemetry.addLine("Back edge flat on the wall, beside the zone, facing away from the wall.");
+        telemetry.addData("alliance half (start must be fully inside)", plan.allianceHalf);
+        telemetry.addLine("SET-UP: back edge flat on the wall, beside the zone, facing away from the wall, fully on your own half,"
+                + " not in the zone, inside 18 in, touching exactly 4 POLLEN (none between robot and zone), then stay still.");
     }
 
     /** Distance from a point to the planned straight line (clamped to its ends). */

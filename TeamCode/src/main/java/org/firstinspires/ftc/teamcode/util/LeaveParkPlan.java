@@ -15,6 +15,10 @@ import java.util.List;
  * One straight line with constant heading joins them. Moving off the wall is LEAVE, ending partly inside the zone
  * is PARK. No turning, so the footprint stays axis-aligned and the swept area is easy to check.
  *
+ * Start rules from the manual (robot set-up) that the plan checks: fully on its own alliance half of the field
+ * (columns A, B, C = red = the half the zone is in, D, E, F = blue), touching the perimeter wall, not in the LOADING
+ * ZONE, and inside the 18 in starting configuration. Not touching a FLOWER is covered by the HIVE keep-out.
+ *
  * Field elements that are avoided: the perimeter walls and the HIVE structure (a keep-out rectangle in the centre of
  * the field, grown by a safety margin). The checks run before the match (plan) and during it (violation).
  */
@@ -36,6 +40,10 @@ public final class LeaveParkPlan {
         public double startGapIn = 2.0;
         /** How far the robot's back edge is moved off the wall at the end, so it is clearly no longer touching. */
         public double leaveClearanceIn = 5.0;
+        /** Smallest allowed gap between the robot and the zone at the start (the robot must not be in the zone). */
+        public double minStartGapIn = 1.0;
+        /** Largest allowed starting configuration size, inches (rule R102: 18 in cube). */
+        public double maxStartSizeIn = 18.0;
         /** Minimum depth the robot must overlap the zone at the end, inches. */
         public double minZoneOverlapIn = 3.0;
         /** HIVE structure keep-out: half sizes around the field centre, and the extra margin around it. */
@@ -50,6 +58,8 @@ public final class LeaveParkPlan {
     public final double[] zone = new double[4];
     /** Keep-out rectangle (hive + margin): {xMin, yMin, xMax, yMax}. */
     public final double[] keepOut = new double[4];
+    /** "red (x 0-72)" or "blue (x 72-144)": the field half the robot must start in, taken from where the zone is. */
+    public String allianceHalf = "";
     /** Human readable reasons the plan must not be run. Empty = OK. */
     public final List<String> problems = new ArrayList<>();
 
@@ -78,6 +88,15 @@ public final class LeaveParkPlan {
         keepOut[1] = FIELD_IN / 2 - c.hiveHalfYIn - c.hiveMarginIn;
         keepOut[2] = FIELD_IN / 2 + c.hiveHalfXIn + c.hiveMarginIn;
         keepOut[3] = FIELD_IN / 2 + c.hiveHalfYIn + c.hiveMarginIn;
+
+        if (c.robotLengthIn > c.maxStartSizeIn + 0.01 || c.robotWidthIn > c.maxStartSizeIn + 0.01) {
+            problems.add(String.format("Robot is %.1f x %.1f in; the starting configuration may not exceed %.0f in.",
+                    c.robotLengthIn, c.robotWidthIn, c.maxStartSizeIn));
+        }
+        if (c.startGapIn < c.minStartGapIn) {
+            problems.add(String.format("Start gap %.1f in is too small: the robot must not be in the LOADING ZONE (need at least %.1f in).",
+                    c.startGapIn, c.minStartGapIn));
+        }
 
         if (zx0 < -0.01 || zy0 < -0.01 || zx1 > FIELD_IN + 0.01 || zy1 > FIELD_IN + 0.01 || zx1 - zx0 < 1 || zy1 - zy0 < 1) {
             problems.add("Loading zone rectangle is not inside the 144 x 144 field.");
@@ -134,6 +153,28 @@ public final class LeaveParkPlan {
         parkY = oy + parkD * ny + parkS * ty;
 
         // Pre-flight checks.
+        // Alliance half: the robot must start fully on its own side, columns A-C (x 0-72) or D-F (x 72-144).
+        // The zone is on the robot's own side, so the zone says which half that is.
+        if (zx0 < FIELD_IN / 2 && zx1 > FIELD_IN / 2) {
+            problems.add("Loading zone crosses the field centre line, so the alliance side is unclear.");
+        } else {
+            boolean red = (zx0 + zx1) / 2 < FIELD_IN / 2;
+            allianceHalf = red ? "red (x 0-72)" : "blue (x 72-144)";
+            double lo = red ? 0 : FIELD_IN / 2, hi = red ? FIELD_IN / 2 : FIELD_IN;
+            double bx0 = Double.MAX_VALUE, bx1 = -Double.MAX_VALUE;
+            for (double[] p : footprint(startX, startY, heading)) {
+                bx0 = Math.min(bx0, p[0]);
+                bx1 = Math.max(bx1, p[0]);
+            }
+            if (bx0 < lo - 0.01 || bx1 > hi + 0.01) {
+                problems.add(String.format("Start is not fully on the robot's own alliance side (%s): robot spans x %.1f to %.1f. "
+                        + "Start on the other side of the zone.", allianceHalf, bx0, bx1));
+            }
+        }
+        // Touching the wall: the back edge is on the wall by construction.
+        if (Math.abs(wallGap(startX, startY, heading)) > 0.01) {
+            problems.add("Start pose is not touching the perimeter wall.");
+        }
         double overlapDepth = dMax - c.leaveClearanceIn; // robot back edge sits at leaveClearance, zone ends at dMax
         if (overlapDepth < c.minZoneOverlapIn) {
             problems.add(String.format("Robot would overlap the zone by only %.1f in at the end (need %.1f). "
