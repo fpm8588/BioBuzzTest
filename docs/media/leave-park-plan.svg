@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="860" viewBox="0 0 800 860" font-family="sans-serif" font-size="12">
+<rect width="800" height="860" fill="#ffffff"/>
+<rect x="40.0" y="40.0" width="720.0" height="720.0" fill="#f2f2ee" stroke="#222" stroke-width="3"/>
+<line x1="160" y1="760" x2="160" y2="40" stroke="#d6d6cf"/>
+<line x1="40" y1="640" x2="760" y2="640" stroke="#d6d6cf"/>
+<line x1="280" y1="760" x2="280" y2="40" stroke="#d6d6cf"/>
+<line x1="40" y1="520" x2="760" y2="520" stroke="#d6d6cf"/>
+<line x1="400" y1="760" x2="400" y2="40" stroke="#d6d6cf"/>
+<line x1="40" y1="400" x2="760" y2="400" stroke="#d6d6cf"/>
+<line x1="520" y1="760" x2="520" y2="40" stroke="#d6d6cf"/>
+<line x1="40" y1="280" x2="760" y2="280" stroke="#d6d6cf"/>
+<line x1="640" y1="760" x2="640" y2="40" stroke="#d6d6cf"/>
+<line x1="40" y1="160" x2="760" y2="160" stroke="#d6d6cf"/>
+<rect x="220.0" y="220.0" width="360.0" height="360.0" fill="#f9d6d6" fill-opacity="0.6" stroke="#c0392b" stroke-dasharray="6 4"/>
+<rect x="250.0" y="250.0" width="300.0" height="300.0" fill="#e8b84a" fill-opacity="0.5" stroke="#9a7410"/>
+<text x="400" y="400" text-anchor="middle" fill="#6b4e00">HIVE structure (assumed 60x60)</text>
+<text x="400" y="416" text-anchor="middle" fill="#c0392b">keep-out, robot never enters</text>
+<rect x="40.0" y="162.5" width="55.0" height="115.0" fill="#c0392b" fill-opacity="0.45" stroke="#c0392b" stroke-width="2"/>
+<line x1="85" y1="332.5" x2="110" y2="220" stroke="#111" stroke-width="2"/>
+<rect x="40.0" y="287.5" width="90.0" height="90.0" fill="none" fill-opacity="1" stroke="#111" stroke-width="2"/>
+<rect x="65.0" y="175.0" width="90.0" height="90.0" fill="#c0392b" fill-opacity="0.35" stroke="#111" stroke-width="2"/>
+<circle cx="110" cy="220" r="3" fill="#111"/>
+<text x="130" y="150" fill="#c0392b" font-weight="bold">Zone A5 (assumed red)</text>
+<rect x="705.0" y="522.5" width="55.0" height="115.0" fill="#1f5fa8" fill-opacity="0.45" stroke="#1f5fa8" stroke-width="2"/>
+<line x1="715" y1="467.5" x2="690" y2="580" stroke="#111" stroke-width="2"/>
+<rect x="670.0" y="422.5" width="90.0" height="90.0" fill="none" fill-opacity="1" stroke="#111" stroke-width="2"/>
+<rect x="645.0" y="535.0" width="90.0" height="90.0" fill="#1f5fa8" fill-opacity="0.35" stroke="#111" stroke-width="2"/>
+<circle cx="690" cy="580" r="3" fill="#111"/>
+<text x="440" y="660" fill="#1f5fa8" font-weight="bold">Zone F2 (assumed blue)</text>
+<text x="40" y="26" font-size="14" font-weight="bold">Leave and Park: start (square, outline) to park (filled), field top view, inches</text>
+<text x="40" y="814">Squares are the 18x18 robot. Start: back edge on the wall, beside the zone. Park: 5 in off the wall, 6 in into the zone.</text>
+<text x="40" y="832">Zone position, start legality and HIVE size are assumed, not read from the manual. Measure and confirm.</text>
+</svg>
