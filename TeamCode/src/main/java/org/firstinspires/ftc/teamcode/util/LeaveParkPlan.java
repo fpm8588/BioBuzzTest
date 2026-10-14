@@ -17,10 +17,11 @@ import java.util.List;
  *
  * Start rules from the manual (robot set-up) that the plan checks: fully on its own alliance half of the field
  * (columns A, B, C = red = the half the zone is in, D, E, F = blue), touching the perimeter wall, not in the LOADING
- * ZONE, and inside the 18 in starting configuration. Not touching a FLOWER is covered by the HIVE keep-out.
+ * ZONE, and inside the 18 in starting configuration. Not touching a FLOWER is covered by the FLOWER keep-outs.
  *
- * Field elements that are avoided: the perimeter walls and the HIVE structure (a keep-out rectangle in the centre of
- * the field, grown by a safety margin). The checks run before the match (plan) and during it (violation).
+ * Field elements that are avoided: the perimeter walls, the HIVE structure (a keep-out rectangle in the centre of
+ * the field) and the four FLOWER towers near the walls (a keep-out square around each), all grown by safety margins.
+ * The checks run before the match (plan) and during it (violation).
  */
 public final class LeaveParkPlan {
 
@@ -46,6 +47,16 @@ public final class LeaveParkPlan {
         public double maxStartSizeIn = 18.0;
         /** Minimum depth the robot must overlap the zone at the end, inches. */
         public double minZoneOverlapIn = 3.0;
+        /**
+         * The four FLOWER towers, centre points {x, y} in field coordinates. They stand near the perimeter walls in a
+         * pinwheel pattern, so they matter for a start beside a wall. They are the same after a 180 degree turn, so
+         * ROTATE_180 does not move them. DEFAULTS ARE READ OFF A DRAWING (about +/- 10 in): measure the real ones.
+         */
+        public double[][] flowers = {{40, 16}, {10, 100}, {104, 128}, {134, 44}};
+        /** Half the side of the square kept clear around a flower centre: tower radius plus the rule's scoring volume. */
+        public double flowerHalfIn = 10.0;
+        /** Extra margin around that square, inches. */
+        public double flowerMarginIn = 4.0;
         /** HIVE structure keep-out: half sizes around the field centre, and the extra margin around it. */
         public double hiveHalfXIn = 30.0, hiveHalfYIn = 30.0, hiveMarginIn = 6.0;
         /** Slack allowed when checking the robot against the field edge (the start touches the wall). */
@@ -58,6 +69,8 @@ public final class LeaveParkPlan {
     public final double[] zone = new double[4];
     /** Keep-out rectangle (hive + margin): {xMin, yMin, xMax, yMax}. */
     public final double[] keepOut = new double[4];
+    /** Keep-out squares around the flowers, same layout as keepOut. */
+    public final List<double[]> flowerKeepOuts = new ArrayList<>();
     /** "red (x 0-72)" or "blue (x 72-144)": the field half the robot must start in, taken from where the zone is. */
     public String allianceHalf = "";
     /** Human readable reasons the plan must not be run. Empty = OK. */
@@ -88,6 +101,11 @@ public final class LeaveParkPlan {
         keepOut[1] = FIELD_IN / 2 - c.hiveHalfYIn - c.hiveMarginIn;
         keepOut[2] = FIELD_IN / 2 + c.hiveHalfXIn + c.hiveMarginIn;
         keepOut[3] = FIELD_IN / 2 + c.hiveHalfYIn + c.hiveMarginIn;
+
+        double fh = c.flowerHalfIn + c.flowerMarginIn;
+        for (double[] f : c.flowers) {
+            flowerKeepOuts.add(new double[]{f[0] - fh, f[1] - fh, f[0] + fh, f[1] + fh});
+        }
 
         if (c.robotLengthIn > c.maxStartSizeIn + 0.01 || c.robotWidthIn > c.maxStartSizeIn + 0.01) {
             problems.add(String.format("Robot is %.1f x %.1f in; the starting configuration may not exceed %.0f in.",
@@ -217,11 +235,19 @@ public final class LeaveParkPlan {
         if (minX < -t || minY < -t || maxX > FIELD_IN + t || maxY > FIELD_IN + t) {
             return "robot would be outside the field walls";
         }
-        double[][] hive = {{keepOut[0], keepOut[1]}, {keepOut[2], keepOut[1]}, {keepOut[2], keepOut[3]}, {keepOut[0], keepOut[3]}};
-        if (overlap(box, hive)) {
+        if (overlap(box, corners(keepOut))) {
             return "robot would touch the HIVE keep-out area";
         }
+        for (int i = 0; i < flowerKeepOuts.size(); i++) {
+            if (overlap(box, corners(flowerKeepOuts.get(i)))) {
+                return "robot would touch the keep-out area of FLOWER " + (i + 1);
+            }
+        }
         return null;
+    }
+
+    private static double[][] corners(double[] r) {
+        return new double[][]{{r[0], r[1]}, {r[2], r[1]}, {r[2], r[3]}, {r[0], r[3]}};
     }
 
     /** Smallest distance from the robot's footprint to any perimeter wall. Above 0 means "no longer touching". */

@@ -27,9 +27,10 @@ import org.firstinspires.ftc.teamcode.util.LeaveParkPlan;
  * Field elements and how they are avoided:
  *   - Perimeter walls: the plan keeps the robot's whole footprint inside the field, and the route ends clear of
  *     the wall by LEAVE_CLEARANCE_IN.
- *   - HIVE structure (with its flowers) in the middle of the field: a keep-out square around it is checked along the
- *     whole planned line before the robot moves, and against the live position every loop while it moves. The route
- *     stays at the field edge, more than 35 in from the keep-out.
+ *   - HIVE structure in the middle of the field and the four FLOWER towers (they stand near the perimeter walls in a
+ *     pinwheel pattern, NOT in the middle): a keep-out square around each is checked along the whole planned line
+ *     before the robot moves, and against the live position every loop while it moves. The route stays at the field
+ *     edge, over 35 in from the HIVE keep-out; the closest flower is about 20 in from the swept area.
  *   - Other robots can not be planned for. Agree with your alliance partner which of you leaves first, and use
  *     START_DELAY_SEC if you need to wait.
  * If any check fails, the robot does not move and the screen says why. If the robot ever leaves the plan, it stops.
@@ -39,8 +40,8 @@ import org.firstinspires.ftc.teamcode.util.LeaveParkPlan;
  *      from where the loading zone is, and the plan refuses a start that is not fully inside that half.
  *   B. not attached to or hanging from a field element: you check this by eye.
  *   C. touching the perimeter wall: the start pose puts the back edge exactly on the wall.
- *   D. not touching or inside a FLOWER's scoring volume: the flowers are part of the HIVE structure in the middle,
- *      far from the start. Check by eye; the plan also keeps clear of a keep-out area around the HIVE.
+ *   D. not touching or inside a FLOWER's scoring volume: each flower has a keep-out square (FLOWER_HALF_IN plus
+ *      FLOWER_MARGIN_IN around its centre) that the start, the route and the end must stay out of. Check by eye too.
  *   E. not in the LOADING ZONE: the start is beside the zone with START_GAP_IN (at least 1 in) of space.
  *   F. inside the starting configuration (18 in cube): the plan refuses a robot size over 18 in. Height and any
  *      parts that unfold are for you to check.
@@ -49,10 +50,14 @@ import org.firstinspires.ftc.teamcode.util.LeaveParkPlan;
  *   H. fully motionless after INIT: the only motor command before START is zero power (from building the follower).
  *
  * VERIFY BEFORE USE (see the numbers marked ASSUMED): the game manual could not be read from the build machine, so
- * the loading zone position and the HIVE size came from search results, not the manual.
- * 1. Measure the LOADING ZONE tape on your field and fix ZONE_* (inches from the bottom-left corner of your frame).
- *    Per the manual's columns, the red zone is in column A and the blue zone in column F.
- * 2. Set ROBOT_LENGTH_IN / ROBOT_WIDTH_IN to the real chassis size in the start configuration (at most 18 x 18).
+ * the loading zone position, the flower positions and the HIVE size came from search results and a field drawing,
+ * not the manual. The positions are in a frame where x runs from the red alliance wall (x = 0) to the blue wall
+ * (x = 144), and y runs along the walls.
+ * 1. Measure the LOADING ZONE tape on your field and fix ZONE_* (inches in that frame). Per the manual's columns,
+ *    the red zone is in column A and the blue zone in column F.
+ * 2. Measure the centre of each FLOWER tower and fix FLOWER_n_X / FLOWER_n_Y. The defaults were read off a drawing
+ *    and can be about 10 in out.
+ * 3. Set ROBOT_LENGTH_IN / ROBOT_WIDTH_IN to the real chassis size in the start configuration (at most 18 x 18).
  *
  * Setup: robot centred beside the zone as shown on the Driver Station, back edge flat against the wall, facing away
  * from the wall. The Driver Station prints the exact start and end poses at INIT.
@@ -63,12 +68,13 @@ import org.firstinspires.ftc.teamcode.util.LeaveParkPlan;
 public class LeaveAndPark extends LinearOpMode {
 
     // ASSUMED: the red LOADING ZONE is on tile A5 and the blue one on tile F2 (a 180 degree turn of each other),
-    // about 23 in along the wall and 11 in deep. Here A5 is taken as the left wall, 5th tile up from the bottom.
+    // about 23 in along the wall and 11 in deep. In this frame the red wall is x = 0 and tile row 5 is y 24 to 48
+    // (rows counted from the other end), which matches where the red tape sits in the field drawing.
     // Measure your field and correct these. Rectangle corners in inches, before ROTATE_180.
     public static double ZONE_X_MIN = 0.0;
-    public static double ZONE_Y_MIN = 96.5;
+    public static double ZONE_Y_MIN = 24.5;
     public static double ZONE_X_MAX = 11.0;
-    public static double ZONE_Y_MAX = 119.5;
+    public static double ZONE_Y_MAX = 47.5;
 
     /**
      * false = use the zone rectangle as typed (the red zone, columns A-C, the x 0 to 72 half);
@@ -76,8 +82,11 @@ public class LeaveAndPark extends LinearOpMode {
      */
     public static boolean ROTATE_180 = false;
 
-    /** Which side of the zone to start on along the wall: -1 or +1. Pick the side with more free space. */
-    public static int START_SIDE = -1;
+    /**
+     * Which side of the zone to start on along the wall: -1 or +1. Default +1 (toward larger y on the red wall), which
+     * is away from the flower at about (40, 16). The plan refuses a side that hits a flower or leaves your half.
+     */
+    public static int START_SIDE = 1;
 
     /** Real robot size in the start configuration, inches (18 x 18 is the largest allowed to start). */
     public static double ROBOT_LENGTH_IN = 18.0; // front to back
@@ -88,6 +97,17 @@ public class LeaveAndPark extends LinearOpMode {
 
     /** How far the robot's back edge ends up from the wall. Must be above 0 for LEAVE; zone depth minus this is the overlap. */
     public static double LEAVE_CLEARANCE_IN = 5.0;
+
+    // ASSUMED: the four FLOWER tower centres, read off a field drawing (+/- 10 in), in the same frame as the zone.
+    // They stand near the walls, and the set looks the same after a 180 degree turn, so ROTATE_180 does not move them.
+    public static double FLOWER_1_X = 40.0,  FLOWER_1_Y = 16.0;
+    public static double FLOWER_2_X = 10.0,  FLOWER_2_Y = 100.0;
+    public static double FLOWER_3_X = 104.0, FLOWER_3_Y = 128.0;
+    public static double FLOWER_4_X = 134.0, FLOWER_4_Y = 44.0;
+    /** Half the side of the square kept clear around each flower centre (tower plus its scoring volume), inches. */
+    public static double FLOWER_HALF_IN = 10.0;
+    /** Extra margin around that square, inches. */
+    public static double FLOWER_MARGIN_IN = 4.0;
 
     /** ASSUMED: HIVE structure half size around the field centre, inches (frame about 49 x 39 plus flowers), grown by the margin. */
     public static double HIVE_HALF_X_IN = 30.0;
@@ -124,6 +144,10 @@ public class LeaveAndPark extends LinearOpMode {
         c.hiveHalfXIn = HIVE_HALF_X_IN;
         c.hiveHalfYIn = HIVE_HALF_Y_IN;
         c.hiveMarginIn = HIVE_MARGIN_IN;
+        c.flowers = new double[][]{
+                {FLOWER_1_X, FLOWER_1_Y}, {FLOWER_2_X, FLOWER_2_Y}, {FLOWER_3_X, FLOWER_3_Y}, {FLOWER_4_X, FLOWER_4_Y}};
+        c.flowerHalfIn = FLOWER_HALF_IN;
+        c.flowerMarginIn = FLOWER_MARGIN_IN;
         return LeaveParkPlan.plan(c);
     }
 
