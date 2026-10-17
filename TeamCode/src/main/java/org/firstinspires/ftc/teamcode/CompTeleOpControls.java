@@ -13,7 +13,8 @@ public class CompTeleOpControls {
     // ===== DRIVE =====
     // forward is negative on the stick
     public static double driveForward(Gamepad driver, Gamepad operator) { return -driver.left_stick_y; }
-    public static double driveStrafe(Gamepad driver, Gamepad operator) { return driver.left_stick_x; }
+    // Pedro's strafe is positive to the LEFT, but the stick is positive to the RIGHT, so flip it
+    public static double driveStrafe(Gamepad driver, Gamepad operator) { return -driver.left_stick_x; }
     public static double driveTurn(Gamepad driver, Gamepad operator) { return driver.right_stick_x; }
 
     // ===== SLOW MODE =====
@@ -40,6 +41,6 @@ public class CompTeleOpControls {
     public static boolean sortRight(Gamepad driver, Gamepad operator) { return operator.right_bumper; }
 
     // ===== AUTOMATION TRIGGERS =====
-    // Zero the robot's heading in the Pedro follower to the driver's current facing, for when the IMU/Pinpoint heading drifts mid-match.
+    // Zero the robot's heading in the Pedro follower to the driver's current facing, for when the IMU heading drifts mid-match.
     public static boolean resetHeading(Gamepad driver, Gamepad operator) { return driver.a && driver.b; }
 }
