@@ -52,7 +52,9 @@ public final class LeaveParkPlan {
          * pinwheel pattern, so they matter for a start beside a wall. They are the same after a 180 degree turn, so
          * ROTATE_180 does not move them. DEFAULTS ARE READ OFF A DRAWING (about +/- 10 in): measure the real ones.
          */
-        public double[][] flowers = {{40, 16}, {10, 100}, {104, 128}, {134, 44}};
+        public double[][] flowers = {{40, 128}, {10, 44}, {104, 16}, {134, 100}};
+        /** Radius of a flower tower body itself, inches, used only to report how close the robot gets to it. */
+        public double flowerTowerRadiusIn = 3.5;
         /** Half the side of the square kept clear around a flower centre: tower radius plus the rule's scoring volume. */
         public double flowerHalfIn = 10.0;
         /** Extra margin around that square, inches. */
@@ -225,6 +227,12 @@ public final class LeaveParkPlan {
      * Used before the match on the planned path and during the match on the live odometry pose.
      */
     public String violation(double x, double y, double h) {
+        String w = wallViolation(x, y, h);
+        return w != null ? w : keepOutViolation(x, y, h);
+    }
+
+    /** Wall part of violation(): null unless the robot's footprint would be outside the field. */
+    public String wallViolation(double x, double y, double h) {
         double[][] box = footprint(x, y, h);
         double minX = Double.MAX_VALUE, maxX = -Double.MAX_VALUE, minY = Double.MAX_VALUE, maxY = -Double.MAX_VALUE;
         for (double[] p : box) {
@@ -235,6 +243,12 @@ public final class LeaveParkPlan {
         if (minX < -t || minY < -t || maxX > FIELD_IN + t || maxY > FIELD_IN + t) {
             return "robot would be outside the field walls";
         }
+        return null;
+    }
+
+    /** HIVE and FLOWER part of violation(): null unless the footprint overlaps a keep-out area. */
+    public String keepOutViolation(double x, double y, double h) {
+        double[][] box = footprint(x, y, h);
         if (overlap(box, corners(keepOut))) {
             return "robot would touch the HIVE keep-out area";
         }
@@ -244,6 +258,87 @@ public final class LeaveParkPlan {
             }
         }
         return null;
+    }
+
+    /**
+     * Gap in inches between the robot's footprint and each field element's body: index 0 is the HIVE (its assumed
+     * half-size, no margin), then one entry per flower (distance to the tower body, centre minus tower radius).
+     * 0 means touching or overlapping.
+     */
+    public double[] clearances(double x, double y, double h) {
+        double[][] box = footprint(x, y, h);
+        double[] out = new double[1 + cfg.flowers.length];
+        double cx = FIELD_IN / 2, cy = FIELD_IN / 2;
+        double[][] hive = {{cx - cfg.hiveHalfXIn, cy - cfg.hiveHalfYIn}, {cx + cfg.hiveHalfXIn, cy - cfg.hiveHalfYIn},
+                {cx + cfg.hiveHalfXIn, cy + cfg.hiveHalfYIn}, {cx - cfg.hiveHalfXIn, cy + cfg.hiveHalfYIn}};
+        out[0] = polygonDistance(box, hive);
+        for (int i = 0; i < cfg.flowers.length; i++) {
+            double d = pointToPolygon(cfg.flowers[i][0], cfg.flowers[i][1], box);
+            out[1 + i] = Math.max(0, d - cfg.flowerTowerRadiusIn);
+        }
+        return out;
+    }
+
+    /**
+     * Manual set-up rules for a start pose that did not come from this plan (a hand-made route): touching the
+     * perimeter wall, fully on the robot's own alliance half, not in the LOADING ZONE, inside the 18 in limit.
+     * Returns the problems found; empty = fine. The alliance half comes from where the zone is.
+     */
+    public List<String> startRuleProblems(double x, double y, double h) {
+        List<String> out = new ArrayList<>();
+        if (cfg.robotLengthIn > cfg.maxStartSizeIn + 0.01 || cfg.robotWidthIn > cfg.maxStartSizeIn + 0.01) {
+            out.add(String.format("Robot is %.1f x %.1f in; the starting configuration may not exceed %.0f in.",
+                    cfg.robotLengthIn, cfg.robotWidthIn, cfg.maxStartSizeIn));
+        }
+        double gap = wallGap(x, y, h);
+        if (gap > 1.0 || gap < -cfg.wallToleranceIn) {
+            out.add(String.format("Start is %.1f in from the nearest wall; the robot must start touching the perimeter wall.", gap));
+        }
+        if (overlapWithZone(x, y, h) > 0) {
+            out.add("Start overlaps the LOADING ZONE; the robot must start outside it.");
+        }
+        if (zone[0] < FIELD_IN / 2 && zone[2] > FIELD_IN / 2) {
+            out.add("Loading zone crosses the field centre line, so the alliance side is unclear.");
+        } else {
+            boolean red = (zone[0] + zone[2]) / 2 < FIELD_IN / 2;
+            double lo = red ? 0 : FIELD_IN / 2, hi = red ? FIELD_IN / 2 : FIELD_IN;
+            double bx0 = Double.MAX_VALUE, bx1 = -Double.MAX_VALUE;
+            for (double[] p : footprint(x, y, h)) {
+                bx0 = Math.min(bx0, p[0]);
+                bx1 = Math.max(bx1, p[0]);
+            }
+            if (bx0 < lo - 0.01 || bx1 > hi + 0.01) {
+                out.add(String.format("Start is not fully on the robot's own alliance side (%s): robot spans x %.1f to %.1f.",
+                        red ? "red, x 0-72" : "blue, x 72-144", bx0, bx1));
+            }
+        }
+        return out;
+    }
+
+    /** Smallest distance between two convex quadrilaterals; 0 if they touch or overlap. */
+    static double polygonDistance(double[][] a, double[][] b) {
+        if (overlap(a, b)) return 0;
+        double best = Double.MAX_VALUE;
+        for (double[] p : a) best = Math.min(best, pointToPolygon(p[0], p[1], b));
+        for (double[] p : b) best = Math.min(best, pointToPolygon(p[0], p[1], a));
+        return best;
+    }
+
+    /** Distance from a point to a convex quadrilateral (0 when inside). */
+    static double pointToPolygon(double px, double py, double[][] poly) {
+        boolean anyPositive = false, anyNegative = false;
+        double best = Double.MAX_VALUE;
+        for (int i = 0; i < poly.length; i++) {
+            double[] a = poly[i], b = poly[(i + 1) % poly.length];
+            double ex = b[0] - a[0], ey = b[1] - a[1];
+            double cross = ex * (py - a[1]) - ey * (px - a[0]);
+            if (cross > 1e-12) anyPositive = true;
+            if (cross < -1e-12) anyNegative = true;
+            double len2 = ex * ex + ey * ey;
+            double f = len2 == 0 ? 0 : Math.max(0, Math.min(1, ((px - a[0]) * ex + (py - a[1]) * ey) / len2));
+            best = Math.min(best, Math.hypot(px - (a[0] + f * ex), py - (a[1] + f * ey)));
+        }
+        return (anyPositive && anyNegative) ? best : 0; // inside when the point is on one side of every edge
     }
 
     private static double[][] corners(double[] r) {
