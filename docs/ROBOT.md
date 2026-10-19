@@ -12,4 +12,4 @@ Read these before writing OpModes so you know each subsystem's hardware, config 
 | [Sorter](subsystems\Sorter.md) | <!-- @ftc-toolchain generated: subsystem-doc — scaffolded; team edits expected --> |
 | [RobotHealthMonitor](subsystems\RobotHealthMonitor.md) | Live power/health dashboard + field position, hosted via Panels |
 
-See also: [Odometry / dead-wheel placement](ODOMETRY.md)
+See also: [Odometry / dead-wheel placement](ODOMETRY.md), [Limelight pollen vision](LIMELIGHT_POLLEN.md)

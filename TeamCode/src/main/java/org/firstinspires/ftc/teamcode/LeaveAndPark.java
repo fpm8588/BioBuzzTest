@@ -168,7 +168,7 @@ public class LeaveAndPark extends LinearOpMode {
     /** Stop if the robot is more than this far from the line it is following, inches. */
     public static double MAX_OFF_LINE_IN = 6.0;
 
-    private static LeaveParkPlan buildPlan() {
+    static LeaveParkPlan buildPlan() { // package-private: PollenChase reuses the same field guard
         LeaveParkPlan.Config c = new LeaveParkPlan.Config();
         c.zoneXMin = ZONE_X_MIN;
         c.zoneYMin = ZONE_Y_MIN;

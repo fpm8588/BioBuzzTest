@@ -13,7 +13,16 @@ enough; no Expansion Hub is needed. Names are case-sensitive and are the origina
 | Motor | 3 | `rb` | Drive, back-right. **Strafe dead wheel plugs into this port's encoder connector** | FORWARD |
 | I2C bus 0 | built-in | `imu` | Control Hub IMU (heading for Pedro) | n/a |
 
-Nothing else needs to be configured. The code does not look up any other device.
+Nothing else needs to be configured for driving. The code does not look up any other device, except the Limelight for
+the pollen vision OpModes (next section).
+
+## Limelight 3A (only for Pollen Vision Test and Pollen Chase)
+
+| Type | Plugs into | Config name | Notes |
+| --- | --- | --- | --- |
+| Limelight 3A (appears as a USB / Ethernet device) | Control Hub blue **USB 3.0** port | `limelight` | Scan in Configure Robot, tap its name and rename it exactly `limelight`. |
+
+Full camera setup is in `LIMELIGHT_POLLEN.md`. The other OpModes do not need it.
 
 Directions are set in code, so don't reverse anything in the config. Configure each drive motor as whichever
 motor type you actually have.
