@@ -60,6 +60,7 @@ import java.util.List;
  *   C. touching the perimeter wall: the start pose puts the back edge exactly on the wall.
  *   D. not touching or inside a FLOWER's scoring volume: each flower has a keep-out square (FLOWER_HALF_IN plus
  *      FLOWER_MARGIN_IN around its centre) that the start, the route and the end must stay out of. Check by eye too.
+ *      The flower keep-outs are currently switched OFF (both set to 0), so only the walls (and the HIVE) are checked.
  *   E. not in the LOADING ZONE: the start is beside the zone with START_GAP_IN (at least 1 in) of space.
  *   F. inside the starting configuration (18 in cube): the plan refuses a robot size over 18 in. Height and any
  *      parts that unfold are for you to check.
@@ -129,10 +130,15 @@ public class LeaveAndPark extends LinearOpMode {
     public static double FLOWER_2_X = 10.0,  FLOWER_2_Y = 44.0;
     public static double FLOWER_3_X = 104.0, FLOWER_3_Y = 16.0;
     public static double FLOWER_4_X = 134.0, FLOWER_4_Y = 100.0;
-    /** Half the side of the square kept clear around each flower centre (tower plus its scoring volume), inches. */
-    public static double FLOWER_HALF_IN = 10.0;
+    /**
+     * Half the side of the square kept clear around each flower centre (tower plus its scoring volume), inches.
+     * FLOWER_HALF_IN and FLOWER_MARGIN_IN are both 0 NOW, which switches the flower keep-out areas OFF (the robot may
+     * go anywhere near a flower; the tower positions above are still used to report how close it gets).
+     * To turn them back on, set them to 10.0 and 4.0.
+     */
+    public static double FLOWER_HALF_IN = 0.0;
     /** Extra margin around that square, inches. */
-    public static double FLOWER_MARGIN_IN = 4.0;
+    public static double FLOWER_MARGIN_IN = 0.0;
 
     /**
      * ASSUMED: HIVE structure half size around the field centre, inches (frame about 49 x 39 plus flowers), grown by the margin.

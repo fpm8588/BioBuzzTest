@@ -252,12 +252,17 @@ public final class LeaveParkPlan {
         if (hiveEnabled() && overlap(box, corners(keepOut))) {
             return "robot would touch the HIVE keep-out area";
         }
-        for (int i = 0; i < flowerKeepOuts.size(); i++) {
+        for (int i = 0; flowersEnabled() && i < flowerKeepOuts.size(); i++) {
             if (overlap(box, corners(flowerKeepOuts.get(i)))) {
                 return "robot would touch the keep-out area of FLOWER " + (i + 1);
             }
         }
         return null;
+    }
+
+    /** False when the flower keep-out half size and margin are both 0: the flower areas are then not checked at all. */
+    public boolean flowersEnabled() {
+        return cfg.flowerHalfIn + cfg.flowerMarginIn > 0;
     }
 
     /** False when the HIVE half sizes and margin are all 0: the HIVE is then not checked at all (for camera range tests). */
