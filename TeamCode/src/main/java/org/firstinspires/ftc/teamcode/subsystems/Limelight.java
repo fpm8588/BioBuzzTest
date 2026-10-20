@@ -109,6 +109,19 @@ public class Limelight {
         return new Sighting(best.txDeg, best.tyDeg, best.area, age, blobs.size());
     }
 
+    /**
+     * Every blob the colour pipeline found in the latest frame (tx and ty in degrees, area as a fraction of the image),
+     * or an empty list if there is no valid result or it is older than maxStalenessMs. Call update() first.
+     */
+    public List<PollenMath.Blob> getBlobs(long maxStalenessMs) {
+        List<PollenMath.Blob> blobs = new ArrayList<>();
+        if (latestResult == null || !latestResult.isValid() || getStalenessMs() > maxStalenessMs) return blobs;
+        for (LLResultTypes.ColorResult c : latestResult.getColorResults()) {
+            blobs.add(new PollenMath.Blob(c.getTargetXDegrees(), c.getTargetYDegrees(), c.getTargetArea()));
+        }
+        return blobs;
+    }
+
     /** Pulls the latest frame result from the Limelight. Call once per loop before reading targets. */
     public void update() {
         latestResult = limelight.getLatestResult();
