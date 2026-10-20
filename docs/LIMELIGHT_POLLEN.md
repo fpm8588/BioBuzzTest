@@ -82,8 +82,8 @@ in a different room usually fails on the field.
 
 ## Part D: the first chase
 
-19. Open floor, at least 20 in clear all round and 3 ft ahead; only one pollen out, 24 to 36 in in front. Set
-    `CHASE_MAX_POWER = 0.3` for the first run. The robot spins in place while searching, so it must not start against a wall.
+19. Open floor, at least 20 in clear all round and 3 ft ahead; only one pollen out, 24 to 36 in in front. The defaults are
+    the fast settings (`CHASE_MAX_POWER = 0.9`); for the very first drive on a new robot lower it to 0.3, then raise it again. The robot spins in place while searching, so it must not start against a wall.
 20. Set where the robot is: `START_X`, `START_Y`, `START_HEADING_DEG` in `PollenSettings` (default 56, 20, facing +y).
     With **no field** (bench or empty floor) set `ENABLE_FIELD_GUARD = false`; otherwise the guard uses the assumed wall,
     HIVE and flower positions from Leave and Park.
@@ -100,7 +100,9 @@ in a different room usually fails on the field.
 | Wobbles left and right while approaching | lower `K_TURN` |
 | Turns too slowly, or stalls just short of aimed | raise `K_TURN` or `MIN_TURN` |
 | Stops too far / too close | `STOP_DISTANCE_IN` |
-| Rushes in and overshoots | lower `K_FORWARD` or `MAX_FORWARD` |
+| Too slow overall | `CHASE_MAX_POWER` first (it caps everything, 0.3 is a crawl), then `MAX_FORWARD`, `K_FORWARD`, `MAX_TURN` |
+| Rushes in and overshoots | raise `LATENCY_LEAD_SEC` (try 0.2), or lower `MAX_FORWARD` |
+| Slows down too early and creeps the last inches | lower `LATENCY_LEAD_SEC` or raise `MIN_FORWARD` |
 | Never starts moving forward | raise `ALIGN_WINDOW_DEG` or `MIN_FORWARD` |
 | Spins forever, never finds it | raise `SEARCH_TURN_POWER` a little, or check the camera sees it in Pollen Vision Test |
 | Chases the wrong thing | go back to Part B step 11 |

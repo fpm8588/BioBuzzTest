@@ -29,7 +29,8 @@ import org.firstinspires.ftc.teamcode.util.PollenMath;
  *
  * Needs: the drive motors, dead wheels and IMU (see HARDWARE_CONFIG.md) plus the Limelight named "limelight".
  * Setup, camera numbers and tuning: docs/LIMELIGHT_POLLEN.md. Run Pollen Vision Test first.
- * First drive: PollenSettings.CHASE_MAX_POWER = 0.3, robot on the field with room, one pollen, hand on STOP.
+ * First drive of a new robot: lower PollenSettings.CHASE_MAX_POWER to 0.3, robot on the field with room, one pollen, hand on STOP.
+ * The defaults are the fast settings (CHASE_MAX_POWER 0.9); a low CHASE_MAX_POWER in Panels is the first thing to check if it is slow.
  */
 @Autonomous(name = "Pollen Chase", group = "Competition")
 public class PollenChase extends LinearOpMode {
@@ -94,6 +95,7 @@ public class PollenChase extends LinearOpMode {
         double seenSince = -1;
         double lastSeenAt = -1;
         double lastDistance = Double.NaN;
+        double prevForward = 0; // last forward command, for the controller's look-ahead
         ElapsedTime run = new ElapsedTime();
         ElapsedTime stateTimer = new ElapsedTime();
 
@@ -172,7 +174,7 @@ public class PollenChase extends LinearOpMode {
                             }
                             // else: hold still for a moment in case it comes back
                         } else {
-                            PollenMath.Command c = PollenMath.command(s.txDeg, PollenSettings.distanceIn(s.tyDeg), gains);
+                            PollenMath.Command c = PollenMath.command(s.txDeg, PollenSettings.distanceIn(s.tyDeg), gains, prevForward);
                             if (c.arrived) {
                                 state = State.ARRIVED;
                                 note = String.format("pollen %.1f in away", PollenSettings.distanceIn(s.tyDeg));
@@ -186,6 +188,7 @@ public class PollenChase extends LinearOpMode {
                         break;
                 }
 
+                prevForward = forward;
                 follower.setTeleOpDrive(forward, 0, turn, true);
 
                 telemetry.addData("state", note.isEmpty() ? state : state + ": " + note);

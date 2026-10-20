@@ -93,20 +93,28 @@ public final class PollenMath {
     /** Controller settings. Powers are motor power fractions (0 to 1), before Pedro's own max power cap. */
     public static final class Gains {
         /** Turn power per degree of tx. */
-        public double kTurn = 0.012;
-        public double maxTurn = 0.35;
+        public double kTurn = 0.018;
+        public double maxTurn = 0.6;
         /** Smallest turn power that still moves the robot, used only while the error is outside the tolerance. */
         public double minTurn = 0.08;
         /** Stop turning when the target is within this many degrees of the crosshair. */
         public double aimToleranceDeg = 1.5;
         /** Forward power per inch of distance still to cover. */
-        public double kForward = 0.02;
-        public double maxForward = 0.45;
-        public double minForward = 0.12;
+        public double kForward = 0.04;
+        public double maxForward = 0.9;
+        public double minForward = 0.15;
         /** Stop when the ball is this far from the camera along the floor, inches. */
         public double stopDistanceIn = 10.0;
         /** Only drive forward when the target is within this many degrees of the crosshair; fades to 0 at the edge. */
-        public double alignWindowDeg = 12.0;
+        public double alignWindowDeg = 20.0;
+        /**
+         * The camera's picture is about this many seconds old when the robot acts on it, and the robot keeps moving in
+         * that time. The controller treats the pollen as already that much closer (speed x this), so it starts braking
+         * earlier and does not overshoot when it drives fast. 0 turns this off.
+         */
+        public double latencyLeadSec = 0.15;
+        /** Robot speed at full power, inches per second (Constants xVelocity is 64). Only used with latencyLeadSec. */
+        public double fullPowerSpeedInPerSec = 64.0;
         /** Flip the turn direction if the camera is mounted so that tx has the opposite sign. */
         public boolean invertTx = false;
     }
@@ -130,6 +138,14 @@ public final class PollenMath {
      * @param distanceIn floor distance from the camera to the ball, inches, or NaN if unknown (then it only turns)
      */
     public static Command command(double txDeg, double distanceIn, Gains g) {
+        return command(txDeg, distanceIn, g, 0);
+    }
+
+    /**
+     * Same, but knowing the forward command given last loop, so it can look ahead by the camera delay: the robot has
+     * been moving at about previousForward x full-power speed for latencyLeadSec since the picture was taken.
+     */
+    public static Command command(double txDeg, double distanceIn, Gains g, double previousForward) {
         double tx = g.invertTx ? -txDeg : txDeg;
 
         // Turn: tx to the right (+) needs a clockwise turn, which is negative in Pedro.
@@ -144,7 +160,10 @@ public final class PollenMath {
         double remaining = distanceIn - g.stopDistanceIn;
         if (remaining <= 0) return new Command(0, turn, true);
 
-        double fwd = Math.min(g.maxForward, Math.max(g.minForward, g.kForward * remaining));
+        double effective = remaining - Math.max(0, previousForward) * g.fullPowerSpeedInPerSec * g.latencyLeadSec;
+        if (effective <= 0) return new Command(0, turn, false); // close enough to coast the rest of the way
+
+        double fwd = Math.min(g.maxForward, Math.max(g.minForward, g.kForward * effective));
         double align = Math.max(0, 1 - Math.abs(tx) / g.alignWindowDeg); // 1 when aimed, 0 at the window edge
         return new Command(fwd * align, turn, false);
     }

@@ -47,24 +47,30 @@ public class PollenSettings {
     public static double STOP_DISTANCE_IN = 10.0;
 
     /** Turn power per degree of tx, and its limits. */
-    public static double K_TURN = 0.012;
-    public static double MAX_TURN = 0.35;
+    public static double K_TURN = 0.018;
+    public static double MAX_TURN = 0.6;
     public static double MIN_TURN = 0.08;
     public static double AIM_TOLERANCE_DEG = 1.5;
 
     /** Forward power per inch still to go, and its limits. */
-    public static double K_FORWARD = 0.02;
-    public static double MAX_FORWARD = 0.45;
-    public static double MIN_FORWARD = 0.12;
+    public static double K_FORWARD = 0.04;
+    public static double MAX_FORWARD = 0.9;
+    public static double MIN_FORWARD = 0.15;
 
     /** Only drive forward when the pollen is within this many degrees of the crosshair. */
-    public static double ALIGN_WINDOW_DEG = 12.0;
+    public static double ALIGN_WINDOW_DEG = 20.0;
 
     /** true if turning goes the wrong way (camera mounted so tx has the opposite sign). Check in PollenVisionTest first. */
     public static boolean INVERT_TX = false;
 
-    /** Overall motor power cap for the chase (0 to 1). */
-    public static double CHASE_MAX_POWER = 0.5;
+    /** Overall motor power cap for the chase (0 to 1). This caps MAX_FORWARD and MAX_TURN: a low value here is a slow robot. */
+    public static double CHASE_MAX_POWER = 0.9;
+
+    /** Camera delay the controller allows for when it brakes, seconds. Raise it if the robot overshoots, lower it if it creeps. */
+    public static double LATENCY_LEAD_SEC = 0.15;
+
+    /** Robot speed at full power, inches per second (the Forward Velocity tuner gave 64). */
+    public static double FULL_POWER_SPEED_IN_S = 64.0;
 
     /** The pollen must be seen continuously this long before the robot reacts to it, seconds. */
     public static double ACQUIRE_TIME_SEC = 0.10;
@@ -79,7 +85,7 @@ public class PollenSettings {
     public static double NEAR_LOST_MARGIN_IN = 6.0;
 
     /** While searching the robot spins in place at this power. Positive = counter-clockwise (left), negative = clockwise. */
-    public static double SEARCH_TURN_POWER = 0.2;
+    public static double SEARCH_TURN_POWER = 0.3;
 
     /** Give up searching after this long, seconds. */
     public static double SEARCH_TIMEOUT_SEC = 6.0;
@@ -116,6 +122,8 @@ public class PollenSettings {
         g.stopDistanceIn = STOP_DISTANCE_IN;
         g.alignWindowDeg = ALIGN_WINDOW_DEG;
         g.invertTx = INVERT_TX;
+        g.latencyLeadSec = LATENCY_LEAD_SEC;
+        g.fullPowerSpeedInPerSec = FULL_POWER_SPEED_IN_S;
         return g;
     }
 
