@@ -90,6 +90,9 @@ public class PollenSettings {
     /** Give up searching after this long, seconds. */
     public static double SEARCH_TIMEOUT_SEC = 6.0;
 
+    /** DRIVEANDGRAB: wait this long after the drive finishes before the chase starts, so the robot has settled, seconds. */
+    public static double PAUSE_BEFORE_CHASE_SEC = 0.3;
+
     /** Give up on the whole run after this long, seconds. Autonomous lasts 30. */
     public static double RUN_TIMEOUT_SEC = 20.0;
 

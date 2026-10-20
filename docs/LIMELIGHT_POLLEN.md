@@ -12,6 +12,8 @@ What is in the code:
 | `PollenSettings.java` | Every number in one place: pipeline slot, camera height and pitch, gains, limits. Editable in Panels. |
 | `PollenVisionTest.java` | **TeleOp "Pollen Vision Test"** (group Test). Never drives. Use it to set the camera up. |
 | `PollenChase.java` | **Autonomous "Pollen Chase"** (group Competition). Search, turn, drive up to the pollen, stop. |
+| `PollenChaser.java` | The same chase as a part another OpMode can start. Used by DRIVEANDGRAB. |
+| `DriveAndGrab.java` | **Autonomous "DRIVEANDGRAB"** (group Competition). The Leave and Park route, then the chase. |
 
 Sources for the Limelight side: the Limelight 3A quick-start and FTC programming guide, the Tennessee Robotics Center
 BIOBUZZ Limelight guide, and the FTC SDK sample `SensorLimelight3A` in this project. The Limelight web interface labels
@@ -109,6 +111,20 @@ in a different room usually fails on the field.
 
 If anything goes wrong the motors stop and the screen says why: the field guard, the 70 in travel limit
 (`MAX_TRAVEL_IN`), the 20 s run limit (`RUN_TIMEOUT_SEC`), or an unconfirmed pipeline.
+
+## DRIVEANDGRAB: the route, then the chase
+
+Autonomous **DRIVEANDGRAB** drives the Leave and Park route start to finish (same route, checks and settings:
+`LeaveAndPark.USE_SUPPLIED_ROUTE`, `ROTATE_180`, `MAX_POWER`, `ENFORCE_*`), stands still for `PAUSE_BEFORE_CHASE_SEC`, then runs
+the pollen chase from where the route ended. The chase starts by searching toward the middle of the field, since the route
+ends against a wall. It needs everything Pollen Chase needs: finish Parts A to C first.
+
+- If the Limelight pipeline is not confirmed at INIT, the route still runs and the chase is skipped.
+- LEAVE and PARK are judged at the end of autonomous. Chasing a pollen drives the robot out of the loading zone, so the route's
+  points are lost unless it is back in the zone at 30 s. It is a test of the two parts together.
+- During the chase the field guard stops the robot at any wall, HIVE or flower keep-out. Near the route's finish the
+  keep-out around flower 1 and the HIVE can stop a chase toward pollen close to them. For a test with no field, or
+  to chase anywhere, set `PollenSettings.ENABLE_FIELD_GUARD = false` (the route's own checks are separate).
 
 ## What is not checked from here
 

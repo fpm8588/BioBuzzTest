@@ -9,6 +9,8 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.util.Drawing;
 import org.firstinspires.ftc.teamcode.util.LeaveParkPlan;
@@ -134,13 +136,12 @@ public class LeaveAndPark extends LinearOpMode {
 
     /**
      * ASSUMED: HIVE structure half size around the field centre, inches (frame about 49 x 39 plus flowers), grown by the margin.
-     * ALL THREE ARE 0 NOW, which switches the HIVE keep-out OFF (for testing the camera range with no HIVE in the way).
-     * Both Leave and Park and Pollen Chase use these numbers, so neither checks the HIVE until they are put back.
-     * To turn it back on, set them to 30.0, 30.0 and 6.0.
+     * Setting all three to 0 switches the HIVE keep-out off (done for a while for camera range tests). Leave and Park,
+     * Pollen Chase and DRIVEANDGRAB all use these numbers.
      */
-    public static double HIVE_HALF_X_IN = 0.0;
-    public static double HIVE_HALF_Y_IN = 0.0;
-    public static double HIVE_MARGIN_IN = 0.0;
+    public static double HIVE_HALF_X_IN = 30.0;
+    public static double HIVE_HALF_Y_IN = 30.0;
+    public static double HIVE_MARGIN_IN = 6.0;
 
     /** Motor power cap while driving (0 to 1). */
     public static double MAX_POWER = 0.5;
@@ -261,7 +262,7 @@ public class LeaveAndPark extends LinearOpMode {
     }
 
     /** What the checks found for one route: problems that stop the robot, warnings that only show, and clearances. */
-    private static final class Report {
+    static final class Report {
         final List<String> blocking = new ArrayList<>();
         final List<String> warnings = new ArrayList<>();
         double[] closest;     // smallest gap to the HIVE, then to each flower tower, along the whole route (inches)
@@ -272,12 +273,12 @@ public class LeaveAndPark extends LinearOpMode {
         boolean enforceField, enforceKeepOuts;
     }
 
-    private static Pose[][] generatedSegments(LeaveParkPlan plan) {
+    static Pose[][] generatedSegments(LeaveParkPlan plan) {
         return new Pose[][]{{new Pose(plan.startX, plan.startY, plan.heading), new Pose(plan.parkX, plan.parkY, plan.heading)}};
     }
 
     /** Runs every check on a route: walls, set-up rules, HIVE and FLOWER clearance, and whether it earns LEAVE and PARK. */
-    private static Report evaluate(LeaveParkPlan plan, Pose[][] segments, boolean supplied) {
+    static Report evaluate(LeaveParkPlan plan, Pose[][] segments, boolean supplied) {
         Report r = new Report();
         r.segments = segments;
         r.enforceField = !supplied || ENFORCE_FIELD_CHECKS;
@@ -338,7 +339,7 @@ public class LeaveAndPark extends LinearOpMode {
         return false;
     }
 
-    private void showReport(Report r, boolean supplied) {
+    static void showReport(Telemetry telemetry, Report r, boolean supplied) {
         boolean ok = r.blocking.isEmpty();
         telemetry.addData("route", supplied ? "supplied 3-path route" + (ROTATE_180 ? " (turned 180: blue)" : " (red)")
                 : "original zone route");
@@ -364,7 +365,7 @@ public class LeaveAndPark extends LinearOpMode {
     }
 
     /** Distance from a point to the straight line a to b (clamped to its ends). */
-    private static double offLine(Pose a, Pose b, double x, double y) {
+    static double offLine(Pose a, Pose b, double x, double y) {
         double dx = b.getX() - a.getX(), dy = b.getY() - a.getY();
         double len2 = dx * dx + dy * dy;
         double f = len2 == 0 ? 0 : Math.max(0, Math.min(1, ((x - a.getX()) * dx + (y - a.getY()) * dy) / len2));
@@ -381,7 +382,7 @@ public class LeaveAndPark extends LinearOpMode {
             LeaveParkPlan plan = buildPlan();
             boolean supplied = USE_SUPPLIED_ROUTE;
             Pose[][] segs = supplied ? new Paths(follower, ROTATE_180).segments() : generatedSegments(plan);
-            showReport(evaluate(plan, segs, supplied), supplied);
+            showReport(telemetry, evaluate(plan, segs, supplied), supplied);
             telemetry.update();
             sleep(100);
         }
@@ -395,7 +396,7 @@ public class LeaveAndPark extends LinearOpMode {
         Report report = evaluate(plan, segments, supplied);
         if (!report.blocking.isEmpty()) {
             while (opModeIsActive()) { // do nothing, just explain
-                showReport(report, supplied);
+                showReport(telemetry, report, supplied);
                 telemetry.update();
                 sleep(200);
             }
