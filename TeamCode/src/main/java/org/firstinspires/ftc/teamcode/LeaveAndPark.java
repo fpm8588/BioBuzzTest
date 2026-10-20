@@ -132,10 +132,15 @@ public class LeaveAndPark extends LinearOpMode {
     /** Extra margin around that square, inches. */
     public static double FLOWER_MARGIN_IN = 4.0;
 
-    /** ASSUMED: HIVE structure half size around the field centre, inches (frame about 49 x 39 plus flowers), grown by the margin. */
-    public static double HIVE_HALF_X_IN = 30.0;
-    public static double HIVE_HALF_Y_IN = 30.0;
-    public static double HIVE_MARGIN_IN = 6.0;
+    /**
+     * ASSUMED: HIVE structure half size around the field centre, inches (frame about 49 x 39 plus flowers), grown by the margin.
+     * ALL THREE ARE 0 NOW, which switches the HIVE keep-out OFF (for testing the camera range with no HIVE in the way).
+     * Both Leave and Park and Pollen Chase use these numbers, so neither checks the HIVE until they are put back.
+     * To turn it back on, set them to 30.0, 30.0 and 6.0.
+     */
+    public static double HIVE_HALF_X_IN = 0.0;
+    public static double HIVE_HALF_Y_IN = 0.0;
+    public static double HIVE_MARGIN_IN = 0.0;
 
     /** Motor power cap while driving (0 to 1). */
     public static double MAX_POWER = 0.5;
@@ -349,7 +354,7 @@ public class LeaveAndPark extends LinearOpMode {
         telemetry.addData("LEAVE / PARK at the end", "%s (gap to wall %.1f in) / %s (%.0f sq in in zone)",
                 r.leaveOk ? "yes" : "NO", r.endWallGap, r.parkOk ? "yes" : "NO", r.endZoneOverlap);
         if (r.closest != null) {
-            StringBuilder sb = new StringBuilder(String.format("HIVE %.1f", r.closest[0]));
+            StringBuilder sb = new StringBuilder(Double.isInfinite(r.closest[0]) ? "HIVE off" : String.format("HIVE %.1f", r.closest[0]));
             for (int i = 1; i < r.closest.length; i++) sb.append(String.format(", F%d %.1f", i, r.closest[i]));
             telemetry.addData("closest the robot gets to each element (in)", sb.toString());
         }

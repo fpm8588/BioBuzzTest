@@ -249,7 +249,7 @@ public final class LeaveParkPlan {
     /** HIVE and FLOWER part of violation(): null unless the footprint overlaps a keep-out area. */
     public String keepOutViolation(double x, double y, double h) {
         double[][] box = footprint(x, y, h);
-        if (overlap(box, corners(keepOut))) {
+        if (hiveEnabled() && overlap(box, corners(keepOut))) {
             return "robot would touch the HIVE keep-out area";
         }
         for (int i = 0; i < flowerKeepOuts.size(); i++) {
@@ -260,9 +260,14 @@ public final class LeaveParkPlan {
         return null;
     }
 
+    /** False when the HIVE half sizes and margin are all 0: the HIVE is then not checked at all (for camera range tests). */
+    public boolean hiveEnabled() {
+        return cfg.hiveHalfXIn > 0 && cfg.hiveHalfYIn > 0;
+    }
+
     /**
      * Gap in inches between the robot's footprint and each field element's body: index 0 is the HIVE (its assumed
-     * half-size, no margin), then one entry per flower (distance to the tower body, centre minus tower radius).
+     * half-size, no margin; infinity when the HIVE is switched off), then one entry per flower (distance to the tower body, centre minus tower radius).
      * 0 means touching or overlapping.
      */
     public double[] clearances(double x, double y, double h) {
@@ -271,7 +276,7 @@ public final class LeaveParkPlan {
         double cx = FIELD_IN / 2, cy = FIELD_IN / 2;
         double[][] hive = {{cx - cfg.hiveHalfXIn, cy - cfg.hiveHalfYIn}, {cx + cfg.hiveHalfXIn, cy - cfg.hiveHalfYIn},
                 {cx + cfg.hiveHalfXIn, cy + cfg.hiveHalfYIn}, {cx - cfg.hiveHalfXIn, cy + cfg.hiveHalfYIn}};
-        out[0] = polygonDistance(box, hive);
+        out[0] = hiveEnabled() ? polygonDistance(box, hive) : Double.POSITIVE_INFINITY; // infinity = HIVE switched off
         for (int i = 0; i < cfg.flowers.length; i++) {
             double d = pointToPolygon(cfg.flowers[i][0], cfg.flowers[i][1], box);
             out[1 + i] = Math.max(0, d - cfg.flowerTowerRadiusIn);
