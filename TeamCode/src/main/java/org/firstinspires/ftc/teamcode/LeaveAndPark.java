@@ -142,12 +142,12 @@ public class LeaveAndPark extends LinearOpMode {
 
     /**
      * ASSUMED: HIVE structure half size around the field centre, inches (frame about 49 x 39 plus flowers), grown by the margin.
-     * Setting all three to 0 switches the HIVE keep-out off (done for a while for camera range tests). Leave and Park,
-     * Pollen Chase and DRIVEANDGRAB all use these numbers.
+     * ALL THREE ARE 0 NOW, which switches the HIVE keep-out OFF. Leave and Park, Pollen Chase and DRIVEANDGRAB all use
+     * these numbers, so none of them checks the HIVE until they are put back. To turn it back on, set them to 30.0, 30.0 and 6.0.
      */
-    public static double HIVE_HALF_X_IN = 30.0;
-    public static double HIVE_HALF_Y_IN = 30.0;
-    public static double HIVE_MARGIN_IN = 6.0;
+    public static double HIVE_HALF_X_IN = 0.0;
+    public static double HIVE_HALF_Y_IN = 0.0;
+    public static double HIVE_MARGIN_IN = 0.0;
 
     /** Motor power cap while driving (0 to 1). */
     public static double MAX_POWER = 0.5;
