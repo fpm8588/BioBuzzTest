@@ -124,7 +124,7 @@ public class ObstacleSettings {
     /** If there is no way round, wait this long for the obstacle to move, then give up and stop, seconds. */
     public static double BLOCKED_WAIT_SEC = 4.0;
     /** Give up after this many detours in one run. */
-    public static int MAX_DETOURS = 3;
+    public static int MAX_DETOURS = 10;
 
     /**
      * true = when there is no room beside the obstacle, find ANY legal way to the goal, even the long way round the far side of the
