@@ -27,8 +27,11 @@ public class ObstacleSettings {
     /** false = AvoidAndPark just drives the route, the camera is not used. */
     public static boolean ENABLE_AVOIDANCE = true;
 
-    /** true = refuse to move if the obstacle pipeline cannot be confirmed; false = drive the route without avoidance. */
-    public static boolean REQUIRE_VISION = false;
+    /**
+     * true = refuse to move if the obstacle pipeline cannot be confirmed (the safe default: a robot that quietly drives with no
+     * obstacle sensing is the failure this exists to prevent); false = drive the route without avoidance.
+     */
+    public static boolean REQUIRE_VISION = true;
 
     // ---- Limelight pipelines (one slot per colour; the camera runs one pipeline at a time) ----
 
@@ -36,6 +39,12 @@ public class ObstacleSettings {
     public static int PIPELINE_RED_ROBOTS = 1;
     /** Slot holding the BLUE robot-sign colour pipeline. Used when WE are red (LeaveAndPark.ROTATE_180 = false). */
     public static int PIPELINE_BLUE_ROBOTS = 2;
+
+    /**
+     * Pipeline slot to use instead of the one chosen from the alliance. -1 = automatic. Set it to match the COLOUR OF THE SIGN ON THE
+     * ROBOT YOU ARE TESTING AGAINST (a dummy robot is often the wrong colour for your alliance's opponents).
+     */
+    public static int PIPELINE_OVERRIDE = -1;
 
     /** Ignore results older than this many milliseconds. */
     public static long MAX_STALENESS_MS = 100;
@@ -127,6 +136,7 @@ public class ObstacleSettings {
 
     /** Pipeline slot for the OPPOSING alliance's colour: red alliance (ROTATE_180 false) faces blue robots. */
     static int opponentPipeline() {
+        if (PIPELINE_OVERRIDE >= 0) return PIPELINE_OVERRIDE;
         return LeaveAndPark.ROTATE_180 ? PIPELINE_RED_ROBOTS : PIPELINE_BLUE_ROBOTS;
     }
 

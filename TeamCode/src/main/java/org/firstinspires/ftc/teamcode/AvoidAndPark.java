@@ -45,8 +45,10 @@ import java.util.List;
  *   - Distance from patch size is only good to about +/- 30 percent, so the clearances are generous.
  *   - It only looks for the OPPOSING colour: an alliance partner is not seen, and red or blue NECTAR / tape can fool it
  *     unless the pipeline filters are set well (calibration steps).
- *   - If the obstacle pipeline is not confirmed it drives the route WITHOUT avoidance (ObstacleSettings.REQUIRE_VISION = true
- *     makes it refuse instead).
+ *   - If the obstacle pipeline is not confirmed it REFUSES to move (ObstacleSettings.REQUIRE_VISION, on by default). With it off
+ *     it drives the route WITHOUT avoidance and says so loudly.
+ *   - Whether the pipeline CAN see the robot in front of it is only known to you: at INIT, put the obstacle in view and check
+ *     that a patch is listed as "kept". The screen also shows, during the run, how many blobs the camera found and what became of them.
  *
  * Needs the drive motors, dead wheels and IMU plus the Limelight named "limelight".
  */
@@ -70,6 +72,7 @@ public class AvoidAndPark extends LinearOpMode {
     private int detours = 0;
     private String note = "";
     private String lastPlan = "";
+    private double lastBlobAt = -1;
 
     @Override
     public void runOpMode() {
@@ -93,15 +96,27 @@ public class AvoidAndPark extends LinearOpMode {
                 telemetry.addData("avoidance", !visionWanted ? "OFF (ENABLE_AVOIDANCE = false)"
                         : pipelineOk ? "ON, pipeline " + ObstacleSettings.opponentPipeline() + " (" + (LeaveAndPark.ROTATE_180 ? "red" : "blue") + " robots)"
                         : "OFF: pipeline " + ObstacleSettings.opponentPipeline() + " NOT confirmed" + (ObstacleSettings.REQUIRE_VISION ? " (the robot will not move)" : ""));
+                if (!visionOn) {
+                    telemetry.addLine("!! AVOIDANCE IS OFF: the robot will NOT go round anything" + (ObstacleSettings.REQUIRE_VISION ? " (and will not move)." : "."));
+                }
                 if (visionOn) {
                     limelight.update();
                     Pose first = segs[0][0];
                     List<PollenMath.Blob> blobs = limelight.getBlobs(ObstacleSettings.MAX_STALENESS_MS);
+                    ObstacleTracker preview = ObstacleSettings.newTracker(ObstacleSettings.planningGuard());
+                    telemetry.addData("frame age (ms)", limelight.getStalenessMs() == Long.MAX_VALUE ? "no result (nothing of this colour in view?)" : String.valueOf(limelight.getStalenessMs()));
                     telemetry.addData("blobs in view", blobs.size());
                     for (PollenMath.Blob b : blobs) {
                         double[] pos = ObstacleSettings.position(first, b);
-                        if (pos != null) telemetry.addData("  patch", "tx %.1f  area %.3f%%  ~%.0f in  (%.0f, %.0f)", b.txDeg, b.area * 100,
-                                ObstacleMath.distanceFromArea(b.area, ObstacleSettings.DISTANCE_K), pos[0], pos[1]);
+                        String verdict = pos == null ? "TOO SMALL (below MIN_AREA " + ObstacleSettings.MIN_AREA + ")"
+                                : preview.isIgnored(pos[0], pos[1]) ? "IGNORED (lands on the HIVE / a flower)" : "KEPT";
+                        telemetry.addData("  patch", "%s: tx %.1f  area %.3f%%  ~%s in",
+                                verdict, b.txDeg, b.area * 100,
+                                Double.isNaN(ObstacleMath.distanceFromArea(b.area, ObstacleSettings.DISTANCE_K)) ? "?" : String.valueOf(Math.round(ObstacleMath.distanceFromArea(b.area, ObstacleSettings.DISTANCE_K))));
+                    }
+                    if (blobs.isEmpty()) {
+                        telemetry.addLine("  ! NO patch seen. Put the obstacle in front of the camera now: if this stays empty, the pipeline cannot see it"
+                                + " (wrong colour for pipeline " + ObstacleSettings.opponentPipeline() + ", not tuned, or nothing built in that slot).");
                     }
                 }
                 telemetry.update();
@@ -152,12 +167,17 @@ public class AvoidAndPark extends LinearOpMode {
 
                     // ---- see: put what the camera finds on the field map
                     List<ObstacleMath.Obstacle> obstacles = new ArrayList<>();
+                    int rawBlobs = 0, bigEnough = 0, kept = 0, ignored = 0;
                     if (visionOn) {
                         limelight.update();
                         for (PollenMath.Blob b : limelight.getBlobs(ObstacleSettings.MAX_STALENESS_MS)) {
+                            rawBlobs++;
                             double[] pos = ObstacleSettings.position(pose, b);
-                            if (pos != null) tracker.observe(now, pos[0], pos[1]);
+                            if (pos == null) continue;
+                            bigEnough++;
+                            if (tracker.observe(now, pos[0], pos[1])) kept++; else ignored++;
                         }
+                        if (rawBlobs > 0) lastBlobAt = now;
                         tracker.expire(now);
                         obstacles = tracker.active(now);
                     }
@@ -205,7 +225,14 @@ public class AvoidAndPark extends LinearOpMode {
                     telemetry.addData("mode", mode + (onDetour ? " (on a detour)" : "") + (note.isEmpty() ? "" : ": " + note));
                     telemetry.addData("leg", "%d of %d    detours %d", Math.min(leg + 1, chains.length), chains.length, detours);
                     telemetry.addData("pose", "(%.1f, %.1f) %.0f deg", pose.getX(), pose.getY(), Math.toDegrees(pose.getHeading()));
-                    telemetry.addData("avoidance", visionOn ? obstacles.size() + " obstacle(s)" : "off");
+                    telemetry.addData("avoidance", visionOn ? obstacles.size() + " obstacle(s)" : "!! OFF: not going round anything");
+                    if (visionOn) {
+                        // Where detection breaks, if it does: blobs -> big enough -> kept (not on the HIVE/flowers) -> confirmed.
+                        telemetry.addData("vision", "frame %s ms | blobs %d, big enough %d, kept %d, ignored %d | tracks %d, confirmed %d | last blob %s",
+                                limelight.getStalenessMs() == Long.MAX_VALUE ? "none" : String.valueOf(limelight.getStalenessMs()),
+                                rawBlobs, bigEnough, kept, ignored, tracker.trackCount(), obstacles.size(),
+                                lastBlobAt < 0 ? "never" : String.format("%.1f s ago", now - lastBlobAt));
+                    }
                     for (ObstacleMath.Obstacle o : obstacles) {
                         telemetry.addData("  obstacle", "(%.0f, %.0f)  %.0f in from the robot", o.x, o.y, Math.hypot(o.x - pose.getX(), o.y - pose.getY()));
                     }

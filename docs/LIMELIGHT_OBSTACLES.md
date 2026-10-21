@@ -55,6 +55,46 @@ HIVE or a flower are ignored, because they carry red and blue.
    `ObstacleSettings.REQUIRE_VISION` on to make it refuse instead).
 7. HIVE and flower positions are estimates read off a drawing (about 10 in out). Detours are planned around them, so measure them.
 
+## If the robot drove straight through the obstacle
+
+Two different things can cause this. Work down the list; the screen tells you which.
+
+**1. The camera never saw it (the usual cause).** The AVOIDANDPARK screen shows, at INIT and during the run, how far detection
+got. Put the obstacle in front of the camera at INIT:
+
+| What the screen shows | What it means | Fix |
+| --- | --- | --- |
+| `!! AVOIDANCE IS OFF` | the pipeline slot could not be selected; with `REQUIRE_VISION` on (default) the robot will not move | check the Limelight cable, the config name `limelight`, and that the slot exists |
+| `blobs in view 0` / `NO patch seen`, obstacle in front of the camera | the pipeline cannot see it: wrong **colour** for the pipeline, pipeline not built or not tuned, or the obstacle has no coloured sign | build and tune the pipeline (Part B). To test with a dummy of a different colour, set `ObstacleSettings.PIPELINE_OVERRIDE` to the slot whose colour matches the dummy |
+| `patch: TOO SMALL` | the patch is under `MIN_AREA` | lower `MIN_AREA`; check the filters; use a bigger sign |
+| `patch: IGNORED (lands on the HIVE / a flower)` | the estimated position falls in a HIVE or flower area, so it is thrown away | recalibrate `DISTANCE_K` (an over-estimated distance pushes the obstacle onto the HIVE); check the flower positions |
+| `patch: KEPT` at INIT, but no reaction in the run | detection works; see the run line below | |
+
+During the run the `vision` line counts the stages: `blobs N, big enough N, kept N, ignored N | tracks N, confirmed N | last
+blob X s ago`. `blobs 0` all the way along the obstacle means the camera did not see it; blobs but `confirmed 0` means it was
+seen for under 0.1 s or ignored.
+
+Also check **where** the obstacle sat. The camera looks along the robot's heading: on legs 1 and 3 of the supplied route the robot
+drives sideways to where it faces, so an obstacle there is not in the picture. Leg 2 (the long run up the field) is the one it can
+watch. And check the colour: the red alliance looks for BLUE signs (slot 2), the blue alliance for RED (slot 1).
+
+**2. It saw it but there was nowhere to go.** Then the robot does not drive through: it stops and waits, and gives up after
+`BLOCKED_WAIT_SEC`. The plan was blocked because the corridor beside the wall is only about 44 in wide (wall to the HIVE area).
+Our robot is 16 in wide, so to pass a robot it needs a clear gap of at least 16 in plus a margin on one side. A dummy robot
+18 in across in the **middle** of the corridor leaves at most 13 in on each side, which a 16 in robot cannot use. This is physics, not a
+setting. What the planner decides, from the real code, for an obstacle on the route along leg 2:
+
+| Obstacle centre, inches from the wall | defaults (room needed 25 in) | smaller dummy (radius 9, room needed 20 in) |
+| --- | --- | --- |
+| 4 to 6 | passes on the HIVE side | clear |
+| 7 to 11 | passes on the HIVE side | passes on the HIVE side |
+| 12 to 16 | **blocked: stops and waits** | passes on the HIVE side |
+| 17 to 40 | **blocked: stops and waits** | **blocked: stops and waits** |
+
+To test "goes AROUND", put the dummy within about 10 in of the wall (or against the wall). To make a middle-of-the-corridor
+obstacle passable you would have to change the route to one with more room, since there is no setting that makes a 16 in
+robot fit beside an 18 in robot in a 44 in lane.
+
 ## Calibration
 
 ### Part A: the camera mounting

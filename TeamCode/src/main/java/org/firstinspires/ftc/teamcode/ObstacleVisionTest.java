@@ -24,7 +24,7 @@ import java.util.List;
 @TeleOp(name = "Obstacle Vision Test", group = "Test")
 public class ObstacleVisionTest extends LinearOpMode {
 
-    /** Pipeline slot to test. -1 = the opposing colour's slot chosen from LeaveAndPark.ROTATE_180 (what AVOIDANDPARK uses). */
+    /** Pipeline slot to test. -1 = what AVOIDANDPARK uses (ObstacleSettings.PIPELINE_OVERRIDE, else the opposing colour's slot). */
     public static int PIPELINE_OVERRIDE = -1;
 
     /**
