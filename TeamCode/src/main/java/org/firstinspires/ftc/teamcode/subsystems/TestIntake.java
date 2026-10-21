@@ -2,6 +2,7 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 /*
@@ -12,6 +13,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
      *   b -> intakeOut()
  *   back (always) -> stop()
  */
+@Disabled // hidden: drive + dead wheels only build (remove to re-enable)
 @TeleOp(name = "Test Intake", group = "subsystems")
 public class TestIntake extends OpMode {
 
