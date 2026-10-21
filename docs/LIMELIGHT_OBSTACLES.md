@@ -7,6 +7,9 @@ Read **How it works and its limits** first, then do the calibration in order. Ea
 | File | What it does |
 | --- | --- |
 | `AvoidAndPark.java` | **Autonomous "AVOIDANDPARK"** (group Competition). The Leave and Park route plus the avoidance. |
+| `AvoidRoute2.java` | **Autonomous "AVOIDROUTE2"** (group Competition). The second route (line, curve, line) plus the same avoidance. See **AVOIDROUTE2** below. |
+| `AvoidOpModeBase.java` | The avoidance engine both autonomous OpModes share (seeing, planning, braking, safety checks). |
+| `util/RoutePolyline.java` | A route leg as short straight pieces, so curves can be measured and rejoined. Unit tested. |
 | `ObstacleVisionTest.java` | **TeleOp "Obstacle Vision Test"** (group Test). Never drives. Use it for the whole calibration. |
 | `ObstacleSettings.java` | Every number: pipeline slots, distance constant, radii, margins, timing. Editable in Panels. |
 | `util/ObstacleMath.java` | Distance from patch size, where the obstacle is on the field, and the detour planner. Unit tested. |
@@ -205,6 +208,80 @@ Do this under the real field lights, with real robot signs. Two pipelines, one p
 | Forgets an obstacle it is still beside | raise `HARD_MEMORY_SEC` |
 | Stops for something that is not there, then carries on | raise `MEMORY_SEC` slightly; tighten the pipeline filters |
 | Detour goes into the HIVE or a flower | measure their positions; raise `PLAN_HIVE_*` / `PLAN_FLOWER_*` |
+
+## AVOIDROUTE2: the second route with avoidance
+
+`AvoidRoute2` drives the route exported from the Pedro visualizer (start `(56, 8, 90)`):
+
+| Leg | Path | Heading |
+| --- | --- | --- |
+| 1 | line `(56, 8)` to `shoot1 (56, 25.3109)` | held at 90 |
+| 2 | curve to `(11.9064, 107.7914)`, control point `(9.9074, 32.1442)` | 90 to 180 |
+| 3 | line to `(56.1014, 116.2739)` | 180 to -90 (Pedro turns the short way, +90) |
+
+`ROTATE_180` (the same switch as every other auto) turns the whole route for the blue side. "shoot1" is only a point where the robot
+passes: there is no shooter code, so nothing is fired. The export's `PoseFactory` / `Paths.line(...).linear(...)` calls do not exist in
+Pedro 2.1.2; the file rebuilds the same poses with `BezierLine` / `BezierCurve` and `setLinearHeadingInterpolation` /
+`setConstantHeadingInterpolation`.
+
+**Settings** (Panels, `AvoidRoute2`): `MAX_POWER` 0.5, `START_DELAY_SEC`, `HOLD_END`, `TIMEOUT_SEC` 25,
+`MAX_OFF_PATH_IN` 8, `CURVE_LOOKAHEAD_IN` 12. The alliance switch, the field checks (`ENFORCE_*`) and every camera / avoidance number
+are shared with the other autos (`LeaveAndPark`, `ObstacleSettings`), so the calibration above applies unchanged.
+
+**On the curve** the robot follows the curve until something is in the way, goes round it, and **rejoins the curve a little past it**
+(`REJOIN_BUFFER_IN`, 10 in); the rest of the curve is the same Bezier curve cut at that point, so the route keeps its shape. If the
+obstacle is so near the end of the curve that there is no room to rejoin, it goes to the end of the leg. On the two lines it goes round
+and on to the end of the leg, as AVOIDANDPARK does.
+
+**First run, no obstacle.** Watch `off the path (in)` on the screen: the robot follows a curve less tightly than a line. Set
+`MAX_OFF_PATH_IN` a few inches above the largest value you see (it stops the robot if it is further off than that).
+
+**What the INIT screen warns about, and why it matters.**
+
+- *CAMERA COVERAGE.* The camera is fixed to the robot and looks along its **heading**, not along the direction it travels. On this
+  route the heading turns 90 to 180 degrees while the robot travels north-west and then north, so on most of the route an obstacle
+  on the path is not in view until it is too close to stop for. The screen works this out: a point of the route counts as covered if,
+  from some earlier pose at least 30 in before it, the camera could see it from no more than `TRIGGER_RANGE_IN` (45 in) away. With
+  the settings as shipped about **31 percent** of the route is covered: **the middle of the curve, about `(20, 54)` to `(12, 91)`**.
+  Not covered: the first part of the curve `(49, 27)` to `(20, 54)`, and the end of the curve and all of leg 3, `(12, 91)` to
+  `(54, 116)`. The blue side is the same turned 180 degrees.
+- *Simulation, sign recognised only within 45 in and flickering* (the closest the robot's centre got to a dummy robot's centre; touching is below
+  about 17 in):
+
+  | Dummy at | Result |
+  | --- | --- |
+  | `(18, 58)`, `(14, 74)` (covered) | went round, 24 in |
+  | `(13, 88)` | stopped and waited, gave up after 4 s: the end of the curve is only 20 in from it, inside the 25 in clearance, so the robot cannot get there |
+  | `(30, 38)`, `(12, 98)`, `(21, 109)`, `(32, 112)`, `(44, 114)` (not covered) | **drove into it** (under 1 in) |
+  | `(22, 49)` | seen 18 in away, braked and went round, but brushed it (14 in) |
+
+  Anything that makes the camera see further (a better pipeline, a larger sign) or look where the robot goes helps. The route's own
+  headings are your decision: making the front follow the curve would fix the camera, but the exported headings have the robot
+  turning 90 degrees at the start of the curve and again at the start of leg 3. A second camera is the other way.
+- *"The route passes within X in of flower tower N."* The flower keep-outs are off (you switched them off), so this is only a warning; the
+  estimated positions are +/- 10 in, so measure the real towers. As the positions are set now the curve passes about 1 in from tower
+  2 and leg 3 about 0 in from tower 1 (the blue side: towers 4 and 3).
+
+**Other behaviour to expect.**
+
+- An obstacle within 25 in of a leg's END point blocks that leg: the robot cannot get there, waits `BLOCKED_WAIT_SEC` (4 s), and
+  stops. This includes `shoot1`, 17 in from the start.
+- A first sighting closer than about 20 in cannot be fully avoided: the robot brakes about 3 in after it sees the obstacle at full
+  speed, so it may brush it. Lower `MAX_POWER` if that matters more than time.
+- An obstacle moving across the path is planned for where it was seen, not where it is going.
+- A replan of the detour the robot is already driving (same waypoints, within 8 in) no longer counts toward `MAX_DETOURS`, and an
+  emergency stop does not re-fire every loop once the robot is on its detour (it re-arms when an obstacle is 5 in closer than at the
+  last plan). This also applies to AVOIDANDPARK; in the simulation it turned the "more than 10 detours" aborts (sign recognised only
+  within 18 to 22 in) into completed routes, and changed nothing else.
+- `HOLD_END` now applies to the last leg of AVOIDANDPARK too (it used to apply only to a one-leg route), the same as Leave and Park.
+
+**Checks to run (in this order, `MAX_POWER` 0.3 and a hand on STOP):**
+1. No obstacle: it drives the whole route, ends facing -90 at `(56.1, 116.3)`, `off the path` stays under the limit.
+2. A board with a sign on the covered part of the curve, about `(14, 74)`, 10 in from the wall side: it should be noticed and gone round.
+3. A board on the first part of the curve, about `(30, 38)`, and across the top, about `(32, 112)`: expect it NOT to be noticed. This
+   shows you the uncovered stretches on the real robot; keep your hand on STOP.
+4. A board at `shoot1` `(56, 25)`: it should stop and wait, then give up after 4 s.
+5. Repeat once with `ROTATE_180 = true` on the blue side.
 
 ## What is not checked from here
 

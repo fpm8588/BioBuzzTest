@@ -277,6 +277,9 @@ public class LeaveAndPark extends LinearOpMode {
         double endWallGap, endZoneOverlap;
         Pose[][] segments;
         boolean enforceField, enforceKeepOuts;
+        /** A route that does not end in the zone (AVOIDROUTE2) sets these: no LEAVE / PARK lines or warnings, and its own title. */
+        boolean reportPark = true;
+        String label;
     }
 
     static Pose[][] generatedSegments(LeaveParkPlan plan) {
@@ -285,7 +288,18 @@ public class LeaveAndPark extends LinearOpMode {
 
     /** Runs every check on a route: walls, set-up rules, HIVE and FLOWER clearance, and whether it earns LEAVE and PARK. */
     static Report evaluate(LeaveParkPlan plan, Pose[][] segments, boolean supplied) {
+        return evaluate(plan, segments, supplied, null, 0, true);
+    }
+
+    /**
+     * The same checks for a route made of many short straight pieces (a curve sampled finely). legOfSegment[i] is the leg the
+     * i-th piece belongs to, legCount the number of legs, and the problems are reported as "leg k of n, near (x, y)".
+     * reportPark = false for a route that is not meant to end in the loading zone. The caller replaces r.segments with the
+     * legs' own end points before showing the report.
+     */
+    static Report evaluate(LeaveParkPlan plan, Pose[][] segments, boolean supplied, int[] legOfSegment, int legCount, boolean reportPark) {
         Report r = new Report();
+        r.reportPark = reportPark;
         r.segments = segments;
         r.enforceField = !supplied || ENFORCE_FIELD_CHECKS;
         r.enforceKeepOuts = !supplied || ENFORCE_KEEP_OUTS;
@@ -303,7 +317,9 @@ public class LeaveAndPark extends LinearOpMode {
                 double x = a.getX() + (b.getX() - a.getX()) * f;
                 double y = a.getY() + (b.getY() - a.getY()) * f;
                 double h = a.getHeading() + (b.getHeading() - a.getHeading()) * f;
-                String where = String.format(" (leg %d of %d, %.0f%% along it)", leg + 1, segments.length, f * 100);
+                String where = legOfSegment == null
+                        ? String.format(" (leg %d of %d, %.0f%% along it)", leg + 1, segments.length, f * 100)
+                        : String.format(" (leg %d of %d, near (%.0f, %.0f))", legOfSegment[leg] + 1, legCount, x, y);
                 String w = plan.wallViolation(x, y, h);
                 if (w != null && !containsReason(wallHits, w)) wallHits.add(w + where);
                 String k = plan.keepOutViolation(x, y, h);
@@ -335,8 +351,8 @@ public class LeaveAndPark extends LinearOpMode {
         r.endZoneOverlap = plan.overlapWithZone(end.getX(), end.getY(), end.getHeading());
         r.leaveOk = r.endWallGap > 0.5;
         r.parkOk = r.endZoneOverlap > 0;
-        if (!r.leaveOk) r.warnings.add("End pose is still touching the wall: no LEAVE.");
-        if (!r.parkOk) r.warnings.add("End pose is not in the LOADING ZONE as set here: no PARK.");
+        if (reportPark && !r.leaveOk) r.warnings.add("End pose is still touching the wall: no LEAVE.");
+        if (reportPark && !r.parkOk) r.warnings.add("End pose is not in the LOADING ZONE as set here: no PARK.");
         return r;
     }
 
@@ -347,7 +363,8 @@ public class LeaveAndPark extends LinearOpMode {
 
     static void showReport(Telemetry telemetry, Report r, boolean supplied) {
         boolean ok = r.blocking.isEmpty();
-        telemetry.addData("route", supplied ? "supplied 3-path route" + (ROTATE_180 ? " (turned 180: blue)" : " (red)")
+        telemetry.addData("route", r.label != null ? r.label + (ROTATE_180 ? " (turned 180: blue)" : " (red)")
+                : supplied ? "supplied 3-path route" + (ROTATE_180 ? " (turned 180: blue)" : " (red)")
                 : "original zone route");
         telemetry.addData("checks", ok ? "OK, will run" : "REFUSED (robot will not move)");
         for (String p : r.blocking) telemetry.addLine("  - " + p);
@@ -358,8 +375,10 @@ public class LeaveAndPark extends LinearOpMode {
                     Math.toDegrees(a.getHeading()), b.getX(), b.getY(), Math.toDegrees(b.getHeading()));
         }
         telemetry.addData("route length (in)", "%.0f", r.lengthIn);
-        telemetry.addData("LEAVE / PARK at the end", "%s (gap to wall %.1f in) / %s (%.0f sq in in zone)",
-                r.leaveOk ? "yes" : "NO", r.endWallGap, r.parkOk ? "yes" : "NO", r.endZoneOverlap);
+        if (r.reportPark) {
+            telemetry.addData("LEAVE / PARK at the end", "%s (gap to wall %.1f in) / %s (%.0f sq in in zone)",
+                    r.leaveOk ? "yes" : "NO", r.endWallGap, r.parkOk ? "yes" : "NO", r.endZoneOverlap);
+        }
         if (r.closest != null) {
             StringBuilder sb = new StringBuilder(Double.isInfinite(r.closest[0]) ? "HIVE off" : String.format("HIVE %.1f", r.closest[0]));
             for (int i = 1; i < r.closest.length; i++) sb.append(String.format(", F%d %.1f", i, r.closest[i]));
