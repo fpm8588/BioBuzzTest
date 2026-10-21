@@ -37,8 +37,10 @@ HIVE or a flower are ignored, because they carry red and blue.
   (`ALLOW_LONG_WAY_ROUND`, `LONG_WAY_MAX_EXTRA_IN`, `AUTO_LENGTH_SEC`). Switch it off to make the robot stop and wait instead;
 - no way at all: stop and wait up to 4 s for it to move, then give up and stop;
 - an obstacle suddenly at touching distance: stop at once.
-All of these only go where the robot may legally stand: inside the walls and out of the HIVE and flower areas, planned at the
-`PLAN_` sizes in `ObstacleSettings`. **Measure the HIVE frame and the flower towers before relying on the long way** (the defaults
+All of these only go where the robot may legally stand: inside the walls and, when switched on, out of the HIVE and flower areas,
+planned at the `PLAN_` sizes in `ObstacleSettings`. **Those four sizes are 0 now, so the HIVE and flower boundaries are OFF** and a
+detour may go anywhere inside the walls, including through the middle of the field (restore with 25, 3, 4.5 and 0). Sightings on the
+HIVE and flowers are still filtered out (`IGNORE_*`), because they carry red and blue. **Measure the HIVE frame and the flower towers before relying on the long way** (the defaults
 are estimates read off a drawing, 10 in out is possible): it runs only a few inches outside the planned HIVE area.
 
 **Not seeing is not gone.** An obstacle is only believed gone if the camera could see where it was and sees nothing there. A robot

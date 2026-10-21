@@ -145,16 +145,23 @@ public class ObstacleSettings {
      * within a few inches of flower 2 and a bigger area would make every detour near it look illegal. Positions are estimates:
      * measure them (LeaveAndPark FLOWER_n_X / FLOWER_n_Y).
      */
-    public static double PLAN_HIVE_HALF_IN = 25.0;
-    public static double PLAN_HIVE_MARGIN_IN = 3.0;
-    public static double PLAN_FLOWER_HALF_IN = 4.5;
+    public static double PLAN_HIVE_HALF_IN = 0.0;
+    public static double PLAN_HIVE_MARGIN_IN = 0.0;
+    public static double PLAN_FLOWER_HALF_IN = 0.0;
     public static double PLAN_FLOWER_MARGIN_IN = 0.0;
+    // ALL FOUR ARE 0 NOW: the HIVE and flower boundaries are switched OFF, so a detour or the long way round may go anywhere inside
+    // the walls, including through the middle of the field. To turn them back on use 25.0, 3.0, 4.5 and 0.0.
 
     /**
      * true = sightings that land inside the HIVE or a flower area are thrown away. The HIVE and NECTAR carry red and blue, so
-     * they would otherwise look like robots.
+     * they would otherwise look like robots. This is a FILTER, not a boundary for the robot, so it does not depend on the PLAN_
+     * sizes above: switching those off does not switch this off. Areas below.
      */
     public static boolean IGNORE_STATIC_ELEMENTS = true;
+    /** Half the side of the square round the field centre in which sightings are thrown away (the HIVE, 28 = 25 plus 3), inches. */
+    public static double IGNORE_HIVE_HALF_IN = 28.0;
+    /** Half the side of the square round each flower centre in which sightings are thrown away (the tower and its nectar), inches. */
+    public static double IGNORE_FLOWER_HALF_IN = 4.5;
 
     // ---- helpers ----
 
@@ -194,12 +201,19 @@ public class ObstacleSettings {
         return LeaveParkPlan.plan(c);
     }
 
-    /** A fresh tracker whose ignore areas are the planning HIVE and flower areas. */
+    /** A fresh tracker whose ignore areas are the HIVE and flower filter areas (IGNORE_*), not the planning boundaries. */
     static ObstacleTracker newTracker(LeaveParkPlan guard) {
         List<double[]> ignore = new ArrayList<>();
         if (IGNORE_STATIC_ELEMENTS) {
-            if (guard.hiveEnabled()) ignore.add(guard.keepOut.clone());
-            if (guard.flowersEnabled()) ignore.addAll(guard.flowerKeepOuts);
+            double c = LeaveParkPlan.FIELD_IN / 2;
+            if (IGNORE_HIVE_HALF_IN > 0) ignore.add(new double[]{c - IGNORE_HIVE_HALF_IN, c - IGNORE_HIVE_HALF_IN, c + IGNORE_HIVE_HALF_IN, c + IGNORE_HIVE_HALF_IN});
+            if (IGNORE_FLOWER_HALF_IN > 0) {
+                double[][] flowers = {
+                        {LeaveAndPark.FLOWER_1_X, LeaveAndPark.FLOWER_1_Y}, {LeaveAndPark.FLOWER_2_X, LeaveAndPark.FLOWER_2_Y},
+                        {LeaveAndPark.FLOWER_3_X, LeaveAndPark.FLOWER_3_Y}, {LeaveAndPark.FLOWER_4_X, LeaveAndPark.FLOWER_4_Y}};
+                for (double[] f : flowers) ignore.add(new double[]{f[0] - IGNORE_FLOWER_HALF_IN, f[1] - IGNORE_FLOWER_HALF_IN,
+                        f[0] + IGNORE_FLOWER_HALF_IN, f[1] + IGNORE_FLOWER_HALF_IN});
+            }
         }
         return new ObstacleTracker(MATCH_RADIUS_IN, CONFIRM_TIME_SEC, MEMORY_SEC, HARD_MEMORY_SEC, OBSTACLE_RADIUS_IN, IMMEDIATE_RANGE_IN, ignore);
     }
