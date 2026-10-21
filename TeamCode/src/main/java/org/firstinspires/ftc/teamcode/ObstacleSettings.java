@@ -80,8 +80,21 @@ public class ObstacleSettings {
     public static double MATCH_RADIUS_IN = 14.0;
     /** An obstacle must be seen for this long, and at least twice, before the robot reacts, seconds. */
     public static double CONFIRM_TIME_SEC = 0.10;
-    /** An obstacle not seen for this long is forgotten, seconds. */
+    /**
+     * An obstacle the camera COULD see (it is inside the picture) but does not is forgotten after this long, seconds. This is also
+     * what absorbs a flickering pipeline: a blob that comes and goes keeps the obstacle alive.
+     */
     public static double MEMORY_SEC = 1.5;
+    /**
+     * An obstacle the camera CANNOT see (beside the robot, inside the blind zone just in front of the lens, too far, off to the
+     * side) is kept this long, seconds. NOT SEEING AN OBSTACLE IS NOT THE SAME AS IT BEING GONE: a robot stopped right beside
+     * one cannot see it and must not drive into it.
+     */
+    public static double HARD_MEMORY_SEC = 8.0;
+    /** A sighting this close to the robot counts at once (no confirmation delay), inches. A false stop is cheap; a miss is not. 0 = off. */
+    public static double IMMEDIATE_RANGE_IN = 60.0;
+    /** How wide the camera sees, degrees. 54.5 is the Limelight 3A figure as I remember it: check it against the spec sheet. */
+    public static double CAMERA_HORIZONTAL_FOV_DEG = 54.5;
 
     // ---- how much room to give ----
 
@@ -107,11 +120,22 @@ public class ObstacleSettings {
     // ---- how it reacts ----
 
     /** How often the path is checked against the obstacles, seconds. */
-    public static double REPLAN_INTERVAL_SEC = 0.3;
+    public static double REPLAN_INTERVAL_SEC = 0.1;
     /** If there is no way round, wait this long for the obstacle to move, then give up and stop, seconds. */
     public static double BLOCKED_WAIT_SEC = 4.0;
     /** Give up after this many detours in one run. */
     public static int MAX_DETOURS = 3;
+
+    /**
+     * true = when there is no room beside the obstacle, find ANY legal way to the goal, even the long way round the far side of the
+     * HIVE. The path is planned around the HIVE and flowers at the PLAN_ sizes below, so MEASURE THEM first (they are estimates).
+     * false = stop and wait instead.
+     */
+    public static boolean ALLOW_LONG_WAY_ROUND = true;
+    /** Longest acceptable long way, as extra distance over going straight, inches. */
+    public static double LONG_WAY_MAX_EXTRA_IN = 260.0;
+    /** Length of autonomous, seconds. The long way is only taken if it can finish well inside this. */
+    public static double AUTO_LENGTH_SEC = 30.0;
 
     // ---- field elements, for planning only (separate from the keep-out switches in LeaveAndPark, which are off) ----
 
@@ -138,6 +162,15 @@ public class ObstacleSettings {
     static int opponentPipeline() {
         if (PIPELINE_OVERRIDE >= 0) return PIPELINE_OVERRIDE;
         return LeaveAndPark.ROTATE_180 ? PIPELINE_RED_ROBOTS : PIPELINE_BLUE_ROBOTS;
+    }
+
+    /** Nearest and farthest distance, from the lens, at which a robot sign at TYPICAL_SIGN_HEIGHT_IN is in the picture. */
+    static double[] visibleRange() {
+        double near = PollenMath.nearestVisibleDistanceIn(PollenSettings.CAMERA_HEIGHT_IN, PollenSettings.CAMERA_PITCH_DEG,
+                PollenSettings.CAMERA_VERTICAL_FOV_DEG, TYPICAL_SIGN_HEIGHT_IN);
+        double far = ObstacleMath.farthestVisibleDistanceIn(PollenSettings.CAMERA_HEIGHT_IN, PollenSettings.CAMERA_PITCH_DEG,
+                PollenSettings.CAMERA_VERTICAL_FOV_DEG, TYPICAL_SIGN_HEIGHT_IN);
+        return new double[]{Double.isNaN(near) ? 0 : near, Double.isNaN(far) ? 1e9 : far};
     }
 
     /** The field guard used for planning: walls plus the HIVE and flower areas at the PLAN_ sizes, our robot's size. */
@@ -168,7 +201,7 @@ public class ObstacleSettings {
             if (guard.hiveEnabled()) ignore.add(guard.keepOut.clone());
             if (guard.flowersEnabled()) ignore.addAll(guard.flowerKeepOuts);
         }
-        return new ObstacleTracker(MATCH_RADIUS_IN, CONFIRM_TIME_SEC, MEMORY_SEC, OBSTACLE_RADIUS_IN, ignore);
+        return new ObstacleTracker(MATCH_RADIUS_IN, CONFIRM_TIME_SEC, MEMORY_SEC, HARD_MEMORY_SEC, OBSTACLE_RADIUS_IN, IMMEDIATE_RANGE_IN, ignore);
     }
 
     /** Field position of one blob seen from a robot pose, or null if the blob is too small or has no distance. */

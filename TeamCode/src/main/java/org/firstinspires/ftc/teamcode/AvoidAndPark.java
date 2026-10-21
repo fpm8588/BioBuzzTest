@@ -30,19 +30,27 @@ import java.util.List;
  * bearing, and that puts a remembered obstacle on the field map (ObstacleTracker). Sightings on the HIVE and flowers are
  * ignored. See ObstacleSettings and docs/LIMELIGHT_OBSTACLES.md.
  *
- * REACTING (checked every REPLAN_INTERVAL_SEC):
+ * REACTING (checked every REPLAN_INTERVAL_SEC, 0.1 s):
  *   - path clear              -> carry on;
- *   - obstacle in the way     -> ObstacleMath.planDetour builds a dog-leg round it: over to one side before it, alongside
- *                                at a safe distance, back onto the route. The detour only goes where the robot may legally
- *                                stand (walls, and the HIVE and flowers at the ObstacleSettings PLAN_ sizes);
- *   - no way round            -> stop and wait (the corridor beside the wall is narrow, so this is the common answer);
- *                                if the obstacle goes, resume; after BLOCKED_WAIT_SEC give up and stop;
+ *   - obstacle in the way     -> ObstacleMath.planRoute: a dog-leg round it if there is room (over to one side before it, alongside
+ *                                at a safe distance, back onto the route); if the lane beside the obstacle is too narrow (the corridor
+ *                                beside the wall is), the LONG WAY round, found by a grid search, which can go right round the far side
+ *                                of the HIVE (ALLOW_LONG_WAY_ROUND, only if it fits in the time left). Both only go where the robot may
+ *                                legally stand (walls, and the HIVE and flowers at the ObstacleSettings PLAN_ sizes);
+ *   - no way at all           -> stop and wait; if the obstacle goes, resume; after BLOCKED_WAIT_SEC give up and stop;
  *   - obstacle suddenly close -> stop at once, then plan as above.
+ * Stopping uses the motors' BRAKE, not Pedro's breakFollowing() (which lets them FLOAT and the robot coast into the obstacle).
+ *
+ * NOT SEEING IS NOT GONE: an obstacle is only believed gone if the camera could see where it was and sees nothing there. A robot
+ * stopped beside an obstacle cannot see it (blind zone), so it is remembered for HARD_MEMORY_SEC. A flickering pipeline is tolerated:
+ * sightings are matched by bearing, not by (noisy) distance, and one seen close counts at once.
  *
  * LIMITS you must know:
  *   - The camera looks along the robot's heading. On route legs where the robot drives sideways to its heading (legs 1 and 3 of
  *     the supplied route) it cannot see where it is going; it only reacts to what it saw earlier (MEMORY_SEC) or sees ahead.
- *   - Distance from patch size is only good to about +/- 30 percent, so the clearances are generous.
+ *   - Distance from patch size is only good to about +/- 30 percent, so the clearances are generous. The screen shows DISTANCE_K measured
+ *     from how the patch grows as the robot approaches, and warns if the set value is far off.
+ *   - On the long way the robot strafes, so the camera does not look where it is going: it relies on what it saw earlier.
  *   - It only looks for the OPPOSING colour: an alliance partner is not seen, and red or blue NECTAR / tape can fool it
  *     unless the pipeline filters are set well (calibration steps).
  *   - If the obstacle pipeline is not confirmed it REFUSES to move (ObstacleSettings.REQUIRE_VISION, on by default). With it off
@@ -73,6 +81,8 @@ public class AvoidAndPark extends LinearOpMode {
     private String note = "";
     private String lastPlan = "";
     private double lastBlobAt = -1;
+    private double curX, curY, curH;                    // the robot's pose this loop, for the camera-view test
+    private double kStartArea = -1, kStartX, kStartY, kMeasured = Double.NaN;  // DISTANCE_K measured while approaching
 
     @Override
     public void runOpMode() {
@@ -156,6 +166,10 @@ public class AvoidAndPark extends LinearOpMode {
             final LeaveParkPlan planning = ObstacleSettings.planningGuard();
             final ObstacleMath.PoseLegal legal = (x, y, h) -> planning.violation(x, y, h) == null;
             ObstacleTracker tracker = ObstacleSettings.newTracker(planning);
+            final double[] visRange = ObstacleSettings.visibleRange();
+            // Could the camera see this field point from where the robot is NOW? (Only then does not seeing it mean it is gone.)
+            final ObstacleTracker.Visibility visibility = (x, y) -> ObstacleMath.inCameraView(curX, curY, curH, x, y,
+                    ObstacleSettings.CAMERA_FORWARD_OFFSET_IN, ObstacleSettings.CAMERA_HORIZONTAL_FOV_DEG, visRange[0], visRange[1]);
             ElapsedTime run = new ElapsedTime();
             boolean started = false;
 
@@ -164,6 +178,9 @@ public class AvoidAndPark extends LinearOpMode {
                     follower.update();
                     Pose pose = follower.getPose();
                     double now = run.seconds();
+                    curX = pose.getX();
+                    curY = pose.getY();
+                    curH = pose.getHeading();
 
                     // ---- see: put what the camera finds on the field map
                     List<ObstacleMath.Obstacle> obstacles = new ArrayList<>();
@@ -175,10 +192,11 @@ public class AvoidAndPark extends LinearOpMode {
                             double[] pos = ObstacleSettings.position(pose, b);
                             if (pos == null) continue;
                             bigEnough++;
-                            if (tracker.observe(now, pos[0], pos[1])) kept++; else ignored++;
+                            if (tracker.observe(now, pose.getX(), pose.getY(), pos[0], pos[1])) kept++; else ignored++;
+                            watchK(pose, b);
                         }
                         if (rawBlobs > 0) lastBlobAt = now;
-                        tracker.expire(now);
+                        tracker.expire(now, visibility);
                         obstacles = tracker.active(now);
                     }
 
@@ -237,6 +255,11 @@ public class AvoidAndPark extends LinearOpMode {
                         telemetry.addData("  obstacle", "(%.0f, %.0f)  %.0f in from the robot", o.x, o.y, Math.hypot(o.x - pose.getX(), o.y - pose.getY()));
                     }
                     if (!lastPlan.isEmpty()) telemetry.addData("last plan", lastPlan);
+                    if (!Double.isNaN(kMeasured)) {
+                        double ratio = kMeasured / ObstacleSettings.DISTANCE_K;
+                        telemetry.addData("DISTANCE_K measured while approaching", "%.1f (set %.1f)%s", kMeasured, ObstacleSettings.DISTANCE_K,
+                                ratio > 1.4 || ratio < 0.7 ? "   !! the set value looks WRONG: distances will be off by a factor of " + String.format("%.1f", ratio > 1 ? ratio : 1 / ratio) : "");
+                    }
                     telemetry.addData("LEAVE by odometry (gap to wall, in)", "%.1f", plan.wallGap(pose.getX(), pose.getY(), pose.getHeading()));
                     telemetry.addData("PARK by odometry (area in zone, sq in)", "%.0f", plan.overlapWithZone(pose.getX(), pose.getY(), pose.getHeading()));
                     telemetry.update();
@@ -310,7 +333,34 @@ public class AvoidAndPark extends LinearOpMode {
     private void abort(String reason) {
         mode = Mode.ABORTED;
         note = reason;
-        follower.breakFollowing();
+        holdStill();
+    }
+
+    /**
+     * Stop with the motors BRAKING. Pedro's breakFollowing() puts the motors in FLOAT, so the robot coasts several inches, which is
+     * exactly the distance the robot does not have when it has just seen an obstacle. Zero teleop drive in brake mode stops it quickly.
+     */
+    private void holdStill() {
+        follower.startTeleopDrive(true);
+        follower.setTeleOpDrive(0, 0, 0, true);
+    }
+
+    /**
+     * Measures DISTANCE_K while the robot drives straight at a patch: the area grows as it gets closer, and the distance it travelled is
+     * known from odometry. A set value that is far from the measured one explains an obstacle seen too late or too early.
+     */
+    private void watchK(Pose pose, PollenMath.Blob b) {
+        if (Math.abs(b.txDeg) > 10 || b.area < ObstacleSettings.MIN_AREA) return;
+        if (kStartArea < 0 || b.area < kStartArea) {   // (re)start from the smallest patch seen: the farthest point of the approach
+            kStartArea = b.area;
+            kStartX = pose.getX();
+            kStartY = pose.getY();
+            return;
+        }
+        double travelled = (pose.getX() - kStartX) * Math.cos(pose.getHeading()) + (pose.getY() - kStartY) * Math.sin(pose.getHeading());
+        if (travelled < 8) return;
+        double k = ObstacleMath.kFromApproach(travelled, kStartArea, b.area);
+        if (!Double.isNaN(k) && k > 0.2 && k < 100) kMeasured = Double.isNaN(kMeasured) ? k : 0.7 * kMeasured + 0.3 * k;
     }
 
     // ================= avoidance =================
@@ -351,12 +401,22 @@ public class AvoidAndPark extends LinearOpMode {
         boolean blocked = emergency || mode == Mode.WAITING || remainingBlocked(pose, obstacles);
         if (!blocked) return;
 
-        if (mode == Mode.LEG) follower.breakFollowing(); // stop while deciding (motors off)
+        if (mode == Mode.LEG) holdStill(); // stop while deciding, with the brakes on
 
         Pose goal = segments[leg][1];
-        ObstacleMath.Plan plan = ObstacleMath.planDetour(pose.getX(), pose.getY(), pose.getHeading(), goal.getX(), goal.getY(), goal.getHeading(),
+        double maxExtra = ObstacleSettings.ALLOW_LONG_WAY_ROUND ? ObstacleSettings.LONG_WAY_MAX_EXTRA_IN : 0;
+        ObstacleMath.Plan plan = ObstacleMath.planRoute(pose.getX(), pose.getY(), pose.getHeading(), goal.getX(), goal.getY(), goal.getHeading(),
                 obstacles, ObstacleSettings.ROBOT_CLEARANCE_RADIUS_IN, ObstacleSettings.CLEARANCE_MARGIN_IN,
-                ObstacleSettings.TRIGGER_RANGE_IN, ObstacleSettings.BLOCK_SLACK_IN, legal);
+                ObstacleSettings.TRIGGER_RANGE_IN, ObstacleSettings.BLOCK_SLACK_IN, maxExtra, legal);
+        // A long way only makes sense if there is time left to drive it.
+        if (plan.status == ObstacleMath.Status.DETOUR && plan.extraLengthIn > 40) {
+            double speed = Math.max(10, power * PollenSettings.FULL_POWER_SPEED_IN_S);
+            double seconds = (Math.hypot(goal.getX() - pose.getX(), goal.getY() - pose.getY()) + plan.extraLengthIn) / speed;
+            if (now + seconds > ObstacleSettings.AUTO_LENGTH_SEC - 1.0) {
+                plan = new ObstacleMath.Plan(ObstacleMath.Status.BLOCKED, new double[0][], 0,
+                        String.format("the long way needs %.0f s and only %.0f s are left", seconds, ObstacleSettings.AUTO_LENGTH_SEC - now));
+            }
+        }
         lastPlan = plan.status + ": " + plan.note + (plan.status == ObstacleMath.Status.DETOUR ? String.format(" (+%.0f in)", plan.extraLengthIn) : "");
 
         switch (plan.status) {
@@ -384,7 +444,7 @@ public class AvoidAndPark extends LinearOpMode {
                     mode = Mode.WAITING;
                     waitSince = now;
                     onDetour = false;
-                    follower.breakFollowing();
+                    holdStill();   // brakes on, and stay put while the obstacle is there
                 }
                 note = String.format("blocked, waiting %.1f s", now - waitSince);
                 if (now - waitSince > ObstacleSettings.BLOCKED_WAIT_SEC) {

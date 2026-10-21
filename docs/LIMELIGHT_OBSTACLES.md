@@ -27,20 +27,34 @@ expect (a bigger sign then looks nearer, which is the safe error).
 obstacle counts after it has been seen for 0.1 s and is forgotten 1.5 s after it was last seen. Sightings that land on the
 HIVE or a flower are ignored, because they carry red and blue.
 
-**What it does** (checked every 0.3 s):
+**What it does** (checked every 0.1 s):
 - path clear: carry on;
-- obstacle in the way and room to pass: a dog-leg round it, over to one side before the obstacle, alongside at a safe
-  distance, back onto the route. It only goes where the robot may legally stand (inside the walls, out of the HIVE and
-  flower areas);
-- no room: stop and wait up to 4 s for it to move, then give up and stop;
+- obstacle in the way and room beside it: a dog-leg round it, over to one side before the obstacle, alongside at a safe
+  distance, back onto the route;
+- no room beside it (the usual case for an obstacle in the middle of leg 2): the **long way round**, found by a grid search. For
+  an obstacle in the middle of the corridor it goes south of the HIVE, up the east side, and back along the top, about 170 in
+  longer, about 12 s in total at power 0.5. It is only taken if it fits in the time left in autonomous
+  (`ALLOW_LONG_WAY_ROUND`, `LONG_WAY_MAX_EXTRA_IN`, `AUTO_LENGTH_SEC`). Switch it off to make the robot stop and wait instead;
+- no way at all: stop and wait up to 4 s for it to move, then give up and stop;
 - an obstacle suddenly at touching distance: stop at once.
+All of these only go where the robot may legally stand: inside the walls and out of the HIVE and flower areas, planned at the
+`PLAN_` sizes in `ObstacleSettings`. **Measure the HIVE frame and the flower towers before relying on the long way** (the defaults
+are estimates read off a drawing, 10 in out is possible): it runs only a few inches outside the planned HIVE area.
+
+**Not seeing is not gone.** An obstacle is only believed gone if the camera could see where it was and sees nothing there. A robot
+stopped right beside an obstacle cannot see it (inside the blind zone), so the obstacle is kept for 8 s. Without this rule a
+stopped robot concluded the obstacle had left and drove into it. A **flickering pipeline** is tolerated: sightings are matched by
+bearing, not by the noisy distance estimate, and one seen within 60 in counts at once.
+
+**Stopping** uses the motors' brakes. (Pedro's `breakFollowing()` lets them float, and a robot at 30 in per second then coasts
+several inches, which is more than it has when an obstacle is first seen close.)
 
 **Limits you must know**
-1. **The corridor is narrow.** Leg 2 of the route runs between the wall and the HIVE, about 42 in wide. A robot needs about
-   25 in of room to the side of an obstacle, so there is only room to pass an obstacle that is hugging the wall (the robot
-   goes round on the HIVE side). An obstacle in the middle of the corridor means stop and wait. This is the normal
-   outcome, not a fault. In the simulation: wall-lane robot, detour and finish with about 24 in to spare; middle-lane robot,
-   wait, then give up after 4 s.
+1. **The corridor is narrow.** Leg 2 of the route runs between the wall and the HIVE, about 44 in wide. A robot needs about
+   25 in of room to the side of an obstacle, so a short detour only exists for an obstacle hugging the wall. An obstacle in the
+   middle of the corridor needs the long way round the HIVE (see What it does) or, with that switched off, stop and wait. In the
+   simulation: wall-lane robot, short detour, finish with about 24 in to spare; middle-lane robot, the long way, finish at 12 s
+   with 35 in to spare.
 2. **The camera looks along the robot's heading.** On legs 1 and 3 of the supplied route the robot drives sideways to where it
    faces, so the camera cannot see where it is going. It reacts to what it saw earlier (1.5 s memory) or sees ahead. Leg 2 is
    the leg that works well.
@@ -65,6 +79,7 @@ got. Put the obstacle in front of the camera at INIT:
 | What the screen shows | What it means | Fix |
 | --- | --- | --- |
 | `!! AVOIDANCE IS OFF` | the pipeline slot could not be selected; with `REQUIRE_VISION` on (default) the robot will not move | check the Limelight cable, the config name `limelight`, and that the slot exists |
+| `blobs in view` flickering between some and 0 | the pipeline is marginal: the sign is only caught in some frames. Detection still works, but it reacts later, so fix it: lower the exposure a little more, widen the hue and saturation range, loosen fullness and aspect ratio (Part B), make the sign bigger or better lit | Part B |
 | `blobs in view 0` / `NO patch seen`, obstacle in front of the camera | the pipeline cannot see it: wrong **colour** for the pipeline, pipeline not built or not tuned, or the obstacle has no coloured sign | build and tune the pipeline (Part B). To test with a dummy of a different colour, set `ObstacleSettings.PIPELINE_OVERRIDE` to the slot whose colour matches the dummy |
 | `patch: TOO SMALL` | the patch is under `MIN_AREA` | lower `MIN_AREA`; check the filters; use a bigger sign |
 | `patch: IGNORED (lands on the HIVE / a flower)` | the estimated position falls in a HIVE or flower area, so it is thrown away | recalibrate `DISTANCE_K` (an over-estimated distance pushes the obstacle onto the HIVE); check the flower positions |
@@ -78,8 +93,8 @@ Also check **where** the obstacle sat. The camera looks along the robot's headin
 drives sideways to where it faces, so an obstacle there is not in the picture. Leg 2 (the long run up the field) is the one it can
 watch. And check the colour: the red alliance looks for BLUE signs (slot 2), the blue alliance for RED (slot 1).
 
-**2. It saw it but there was nowhere to go.** Then the robot does not drive through: it stops and waits, and gives up after
-`BLOCKED_WAIT_SEC`. The plan was blocked because the corridor beside the wall is only about 44 in wide (wall to the HIVE area).
+**2. It saw it but there was nowhere to go.** Then it should not drive through: it takes the long way round, or stops and waits
+and gives up after `BLOCKED_WAIT_SEC` (long way off, or no time for it). The plan was blocked because the corridor beside the wall is only about 44 in wide (wall to the HIVE area).
 Our robot is 16 in wide, so to pass a robot it needs a clear gap of at least 16 in plus a margin on one side. A dummy robot
 18 in across in the **middle** of the corridor leaves at most 13 in on each side, which a 16 in robot cannot use. This is physics, not a
 setting. What the planner decides, from the real code, for an obstacle on the route along leg 2:
@@ -88,12 +103,17 @@ setting. What the planner decides, from the real code, for an obstacle on the ro
 | --- | --- | --- |
 | 4 to 6 | passes on the HIVE side | clear |
 | 7 to 11 | passes on the HIVE side | passes on the HIVE side |
-| 12 to 16 | **blocked: stops and waits** | passes on the HIVE side |
-| 17 to 40 | **blocked: stops and waits** | **blocked: stops and waits** |
+| 12 to 16 | **no room beside it: the long way round** | passes on the HIVE side |
+| 17 to 40 | **no room beside it: the long way round** | **no room beside it: the long way round** |
 
-To test "goes AROUND", put the dummy within about 10 in of the wall (or against the wall). To make a middle-of-the-corridor
-obstacle passable you would have to change the route to one with more room, since there is no setting that makes a 16 in
-robot fit beside an 18 in robot in a 44 in lane.
+A dummy anywhere else in the corridor cannot be passed locally (no setting makes a 16 in robot fit beside an 18 in robot in a 44 in
+lane), so the robot takes the long way round the HIVE (`ALLOW_LONG_WAY_ROUND`), as in the last two rows. With the long way off, those
+rows mean stop and wait. To test the short detour, put the dummy within about 10 in of the wall.
+
+**3. It saw it late (the case that actually hit the dummy).** If the sign is only recognised from about 22 in away, the robot has
+under 10 in to stop. The screen's `DISTANCE_K measured while approaching` line, shown during the run, checks the distance
+constant against how the patch really grows as the robot closes in: a measured value far from the set one means every distance is
+wrong by that factor (too large: the obstacle is seen as farther than it is and the robot reacts late).
 
 ## Calibration
 
@@ -179,6 +199,9 @@ Do this under the real field lights, with real robot signs. Two pipelines, one p
 | Goes round too wide, or never finds room | `OBSTACLE_RADIUS_IN` (12), `ROBOT_CLEARANCE_RADIUS_IN` (10), `CLEARANCE_MARGIN_IN` (3): each inch costs room in a narrow corridor |
 | Touches or nearly touches the obstacle | raise `OBSTACLE_RADIUS_IN` and `CLEARANCE_MARGIN_IN`; redo the distance calibration with a smaller sign |
 | Flickers between going round and waiting | raise `BLOCK_SLACK_IN`; raise `CONFIRM_TIME_SEC` a little |
+| Takes the long way when it should wait (or the reverse) | `ALLOW_LONG_WAY_ROUND`, `LONG_WAY_MAX_EXTRA_IN` |
+| Forgets an obstacle it is still beside | raise `HARD_MEMORY_SEC` |
+| Stops for something that is not there, then carries on | raise `MEMORY_SEC` slightly; tighten the pipeline filters |
 | Detour goes into the HIVE or a flower | measure their positions; raise `PLAN_HIVE_*` / `PLAN_FLOWER_*` |
 
 ## What is not checked from here
@@ -187,4 +210,7 @@ Do this under the real field lights, with real robot signs. Two pipelines, one p
 - The Limelight web-interface wording, and the filter values (starting points only).
 - That `ColorResult.getTargetArea()` and `LLResult.getStaleness()` exist under those names in SDK 11.0 (same as the pollen code).
 - How the real distance error behaves across different teams' signs. The simulation uses a sign that is exactly the calibrated size.
+- The camera's horizontal field of view (54.5 degrees, from memory) used for "could the camera see this?", and the sign height.
+- How far the robot coasts and how quickly the brakes stop it. The simulation uses a 0.1 s brake time constant and a 0.45 s float one,
+  which are estimates: check by stopping the robot at speed and measuring.
 - Nothing here has been run on the robot.
