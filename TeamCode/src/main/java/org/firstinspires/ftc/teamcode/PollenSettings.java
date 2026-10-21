@@ -27,10 +27,10 @@ public class PollenSettings {
     // ---- Camera mounting, measured on the robot ----
 
     /** Height of the camera lens above the floor, inches. */
-    public static double CAMERA_HEIGHT_IN = 10.0;
+    public static double CAMERA_HEIGHT_IN = 3.0;
 
     /** How far the camera looks below horizontal, degrees (tilted down = positive). Use the calibration in PollenVisionTest. */
-    public static double CAMERA_PITCH_DEG = 25.0;
+    public static double CAMERA_PITCH_DEG = 0.0; // looking straight ahead: the camera is perpendicular to the floor
 
     /**
      * Vertical field of view of the camera, degrees. Only used to warn when the stop distance is closer than the camera

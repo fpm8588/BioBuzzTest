@@ -44,7 +44,7 @@ public class ObstacleSettings {
      * Pipeline slot to use instead of the one chosen from the alliance. -1 = automatic. Set it to match the COLOUR OF THE SIGN ON THE
      * ROBOT YOU ARE TESTING AGAINST (a dummy robot is often the wrong colour for your alliance's opponents).
      */
-    public static int PIPELINE_OVERRIDE = -1;
+    public static int PIPELINE_OVERRIDE = 1; // slot of the pipeline labelled redRecognizer (the camera selects by slot number, not by label)
 
     /** Ignore results older than this many milliseconds. */
     public static long MAX_STALENESS_MS = 100;
