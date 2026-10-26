@@ -1,31 +1,31 @@
 <!-- @ftc-toolchain generated: subsystem-doc — scaffolded; team edits expected -->
 # Intake
 
-Dual-motor intake with forward/reverse control
+Single-motor intake with forward/reverse control. Works the same from any OpMode, autonomous or teleop.
 
 - **Package:** `org.firstinspires.ftc.teamcode.subsystems`
-- **Source:** `TeamCode\src\main\java\org\firstinspires\ftc\teamcode\subsystems\Intake.java`
-- **Bench test:** `TeamCode\src\main\java\org\firstinspires\ftc\teamcode\subsystems\TestIntake.java` (Driver Station: "Test Intake")
+- **Source:** `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/subsystems/Intake.java`
+- **Bench test:** `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/subsystems/TestIntake.java` (Driver Station: "Test Intake")
 
 ## Hardware
 
 | Field | Type | Config name |
 | --- | --- | --- |
-| `inOne` | DcMotorEx | `inOne` |
-| `inTwo` | DcMotorEx (reversed) | `inTwo` |
+| `intake` | DcMotorEx | `intake` |
 
 > Config names must match the robot configuration on the Driver Station exactly.
 
 ## Functions
 
-- `intakeIn()` — TODO: describe
-- `intakeOut()` — TODO: describe
-- `stop()` — cut power to all actuators
+- `intakeIn()` — run inward at `INTAKE_POWER`
+- `intakeOut()` — run outward (reject) at `INTAKE_POWER`
+- `stop()` — cut power
 
 ## Tuning
 
 - `INTAKE_POWER` = 0.6 — default intake power (dashboard-tunable)
+- `INTAKE_REVERSED` = false — flip if "in" spins the wrong way (read when created)
 
 ## Notes / quirks
 
-_TODO: wiring notes, gotchas, mechanical constraints._
+- The old `inOne` / `inTwo` motors are gone.

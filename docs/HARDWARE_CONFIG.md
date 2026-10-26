@@ -1,7 +1,9 @@
-# Robot configuration chart (Driver Hub): drive motors + dead wheels only
+# Robot configuration chart (Driver Hub)
 
-This branch only uses the four drive motors, the two dead wheels and the Control Hub IMU. One Control Hub is
-enough; no Expansion Hub is needed. Names are case-sensitive and are the original ones from the code.
+The drive (four motors, two dead wheels, IMU) is on the Control Hub. The auxiliary systems (intake, the two shooter
+wheels, the shot-angle adjustor) need the devices in the second table below, and the Control Hub's four motor ports
+are all taken by the drive, so **the intake and shooter motors go on an Expansion Hub**. Names are case-sensitive and are
+the ones in the code.
 
 ## Control Hub
 
@@ -13,8 +15,9 @@ enough; no Expansion Hub is needed. Names are case-sensitive and are the origina
 | Motor | 3 | `rb` | Drive, back-right. **Strafe dead wheel plugs into this port's encoder connector** | FORWARD |
 | I2C bus 0 | built-in | `imu` | Control Hub IMU (heading for Pedro) | n/a |
 
-Nothing else needs to be configured for driving. The code does not look up any other device, except the Limelight for
-the pollen vision OpModes (next section).
+Nothing else needs to be configured for driving. Competition TeleOp and Competition Auto also look up the intake,
+shooter and adjustor devices (see **Auxiliary systems** below) and **fail at INIT if they are not in the active
+configuration**. The Limelight is only used by the vision OpModes (next section).
 
 ## Limelight 3A (only for Pollen Vision Test and Pollen Chase)
 
@@ -33,7 +36,7 @@ motor type you actually have.
 2. Select the **Control Hub** (not the Expansion Hub).
 3. **Motors** tab: set port 0 to `lf`, port 1 to `lb`, port 2 to `rf`, port 3 to `rb`, each with your motor type.
 4. **I2C Bus 0**: make sure the built-in IMU is listed and named exactly `imu`. It is normally added for you.
-5. Don't add servos, digital or analog devices, or any Ethernet / USB device.
+5. For the auxiliary systems add the **Expansion Hub** and the devices from the **Auxiliary systems** table below (`intake`, `shoot1`, `shoot2`, `adjustor`). Don't add anything else, unless you are running the vision OpModes.
 6. **Save** with a name (for example `DriveOnly`), then **Activate** it.
 
 ## Dead wheels (goBILDA 4-bar pods)
@@ -56,22 +59,25 @@ motor type you actually have.
 5. `RobotHealthMonitor` reads velocity on every motor, so on `rf` and `rb` it reports the pod's velocity.
    Ignore stall warnings from those two.
 
-## What is switched off in this branch
+## Auxiliary systems (intake, shooter, shot-angle adjustor)
 
-`CompTeleOp` and `CompAuto` have the shooter, intake, lift, sorter and Limelight code commented out (marked
-`DISABLED`). The subsystem classes are untouched and just aren't created. The `Test ...` subsystem OpModes carry
-`@Disabled` so they are hidden from the Driver Hub menu. To bring a subsystem back, uncomment its lines and add its
-devices to the config from the table below.
+| Config name | Type | Subsystem | Notes |
+| --- | --- | --- | --- |
+| `intake` | motor | `Intake` | Run on power. `Intake.INTAKE_REVERSED` flips it if "in" spins the wrong way. |
+| `shoot1` | motor, **encoder plugged in** | `Shooter` | Run on velocity (the controller holds the speed). Set REVERSE in code. |
+| `shoot2` | motor, **encoder plugged in** | `Shooter` | Faces `shoot1`, so it is set FORWARD while `shoot1` is REVERSE: the wheels spin opposite ways and both are commanded a positive velocity. |
+| `adjustor` | servo | `Adjustor` | Shot angle. Positions 0 to 1, limited by `Adjustor.MIN_POSITION` / `MAX_POSITION`. |
 
-| Config name | Type | Subsystem |
-| --- | --- | --- |
-| `inOne`, `inTwo` | motors | Intake |
-| `spinOne`, `spinTwo` | motors (keep encoders plugged in) | Shooter |
-| `lift` | servo | Lift |
-| `sortOne`, `sortTwo` | servos | Sorter |
-| `limelight` | Limelight 3A (Ethernet Devices) | Limelight |
+Port numbers are your choice; suggested: `intake`, `shoot1`, `shoot2` on Expansion Hub motor ports 0, 1, 2, and `adjustor` on a
+servo port of either hub. Directions are set in code: don't reverse anything in the config. If a shooter wheel throws the wrong way, flip
+`Shooter.SHOOT_ONE_REVERSED` / `SHOOT_TWO_REVERSED`. The shooter speeds are in **ticks per second** (`Shooter.LOW_VELOCITY` 1100,
+`HIGH_VELOCITY` 1400, the values from last year), set with `setVelocity`, so what they mean in RPM depends on the motor and any gearing.
 
-Eight motors need an Expansion Hub as well.
+Still switched off in `CompTeleOp` and `CompAuto` (their code is commented out and marked `DISABLED`): the **sorter**
+(`sortOne`, `sortTwo` servos) and the **Limelight** (`limelight`, Ethernet device). To bring one back, uncomment its lines and add its
+devices to the config.
+
+Seven motors (four drive, three auxiliary) need an Expansion Hub as well.
 
 ## Check it works and tune
 

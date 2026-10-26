@@ -10,10 +10,10 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
-// DISABLED (drive + dead wheels only):
-// import org.firstinspires.ftc.teamcode.subsystems.Intake;
+import org.firstinspires.ftc.teamcode.subsystems.Intake;
+import org.firstinspires.ftc.teamcode.subsystems.Shooter;
+// DISABLED (Limelight not part of this auto yet):
 // import org.firstinspires.ftc.teamcode.subsystems.Limelight;
-// import org.firstinspires.ftc.teamcode.subsystems.Shooter;
 import org.firstinspires.ftc.teamcode.util.Drawing;
 import org.firstinspires.ftc.teamcode.util.RobotHealthMonitor;
 import org.firstinspires.ftc.teamcode.util.Stats;
@@ -35,10 +35,9 @@ public class CompAuto extends LinearOpMode {
     private Timer pathTimer;
     private int pathState;
 
-    // DISABLED (drive + dead wheels only):
-    // private Shooter shooter;
-    // private Intake intake;
-    // private Limelight limelight;
+    private Shooter shooter;
+    private Intake intake;
+    // private Limelight limelight; // DISABLED (Limelight not part of this auto yet)
     private Stats stats;
     private RobotHealthMonitor health;
 
@@ -71,17 +70,15 @@ public class CompAuto extends LinearOpMode {
                 break;
             case 1:
                 if (!follower.isBusy()) {
-                    // DISABLED (drive + dead wheels only): scoring window. Original code:
-                    //   shooter.spinAtHigh(); intake.intakeIn(); setPathState(15);
-                    // Drive straight on to the park pose instead.
-                    follower.followPath(park, true);
-                    setPathState(2);
+                    shooter.spinAtHigh();
+                    intake.intakeIn();
+                    setPathState(15);
                 }
                 break;
             case 15:
                 if (pathTimer.getElapsedTimeSeconds() > SCORE_DURATION_SEC) {
-                    // shooter.stop(); // DISABLED (drive + dead wheels only)
-                    // intake.stop();
+                    shooter.stop();
+                    intake.stop();
                     stats.recordShot(true);
                     follower.followPath(park, true);
                     setPathState(2);
@@ -104,10 +101,9 @@ public class CompAuto extends LinearOpMode {
     public void runOpMode() {
         pathTimer = new Timer();
         follower = Constants.createFollower(hardwareMap);
-        // DISABLED (drive + dead wheels only):
-        // shooter = new Shooter(hardwareMap);
-        // intake = new Intake(hardwareMap);
-        // limelight = new Limelight(hardwareMap);
+        shooter = new Shooter(hardwareMap);
+        intake = new Intake(hardwareMap);
+        // limelight = new Limelight(hardwareMap); // DISABLED (Limelight not part of this auto yet)
         stats = new Stats(telemetry);
         health = new RobotHealthMonitor(hardwareMap, telemetry, "CompAuto");
         Drawing.init();
@@ -122,7 +118,7 @@ public class CompAuto extends LinearOpMode {
 
         while (opModeIsActive()) {
             follower.update();
-            // limelight.update(); // DISABLED (drive + dead wheels only)
+            // limelight.update(); // DISABLED (Limelight not part of this auto yet)
             autonomousPathUpdate();
             stats.trackPose(follower.getPose());
             health.update();
@@ -132,13 +128,13 @@ public class CompAuto extends LinearOpMode {
             telemetry.addData("x", follower.getPose().getX());
             telemetry.addData("y", follower.getPose().getY());
             telemetry.addData("heading", follower.getPose().getHeading());
-            // telemetry.addData("limelight target", limelight.hasTarget()); // DISABLED
+            // telemetry.addData("limelight target", limelight.hasTarget()); // DISABLED (Limelight not part of this auto yet)
             telemetry.update();
             stats.update();
         }
 
-        // shooter.stop(); // DISABLED (drive + dead wheels only)
-        // intake.stop();
+        shooter.stop();
+        intake.stop();
         // limelight.stop();
         stats.writeSummaryToFile("CompAuto");
     }
