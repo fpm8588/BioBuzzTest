@@ -5,11 +5,11 @@ import com.bylazar.configurables.annotations.Configurable;
 import org.firstinspires.ftc.teamcode.util.TagMath;
 
 /*
- * Every number the goal-tag aiming and ranging depends on, in one place, shared by GoalTagTest, CompTeleOp and CompAuto.
+ * Every number the goal-tag aiming and ranging depends on, in one place, shared by GoalTagTest, the red and blue TeleOps (CompTeleOpBase) and CompAuto.
  * Change them in Panels (Configurables > AprilTagSettings), or here and rebuild.
  *
  * The camera itself (height above the floor, tilt, lens angle) is the one in PollenSettings: it is the same camera on the same mount.
- * The goal tag's ID and height come from the field: see docs/LIMELIGHT_APRILTAG.md.
+ * The tag IDs are from the printed strips; the tag size and height come from the field: see docs/LIMELIGHT_APRILTAG.md.
  */
 @Configurable
 public class AprilTagSettings {
@@ -22,14 +22,22 @@ public class AprilTagSettings {
     /** Ignore results older than this many milliseconds. */
     public static long MAX_STALENESS_MS = 100;
 
-    // ---- Which tag ----
+    // ---- Which tags ----
 
     /**
-     * ID of the tag on the RED alliance's goal, and on the BLUE alliance's. -1 = aim at whichever tag is biggest in the picture, which
-     * is fine for a bench test but will pick the wrong tag on a field with several in view. Set both from the tag pictures.
+     * The scoring strips are rows of four tags, IDs running left to right as you face the strip: RED SCORING 30 31 32 33, BLUE SCORING
+     * 42 43 44 45 (the audience strips, 34 to 41, are not used for aiming). The robot aims at the CENTRE of its alliance's strip,
+     * worked out from whichever of the four are in view.
      */
-    public static int GOAL_TAG_ID_RED = -1;
-    public static int GOAL_TAG_ID_BLUE = -1;
+    public static int RED_STRIP_FIRST_ID = 30;
+    public static int BLUE_STRIP_FIRST_ID = 42;
+
+    /**
+     * Size of the black square of a tag, edge to edge, in INCHES (the same number as the tag size in the Limelight pipeline, in mm, divided
+     * by 25.4). Needed to find the strip's centre when only some of its tags are in view. 0 = not set: the robot then aims at the middle of
+     * the tags it can see, which is off-centre by up to two tag widths when only part of the strip is in view.
+     */
+    public static double TAG_SIZE_IN = 0.0;
 
     // ---- Range ----
 
@@ -68,9 +76,9 @@ public class AprilTagSettings {
     /** Autonomous: if no goal tag is in view this long after the aim starts, skip the aim, seconds. */
     public static double AUTO_NO_TAG_SKIP_SEC = 0.4;
 
-    /** The goal tag ID for the alliance set by LeaveAndPark.ROTATE_180 (false = red, true = blue; the switch every autonomous uses). */
-    public static int goalTagId() {
-        return LeaveAndPark.ROTATE_180 ? GOAL_TAG_ID_BLUE : GOAL_TAG_ID_RED;
+    /** First tag ID of the alliance's strip for the alliance set by LeaveAndPark.ROTATE_180 (false = red, true = blue; the switch every autonomous uses). */
+    public static int firstTagId() {
+        return LeaveAndPark.ROTATE_180 ? BLUE_STRIP_FIRST_ID : RED_STRIP_FIRST_ID;
     }
 
     public static TagMath.AimGains aimGains() {

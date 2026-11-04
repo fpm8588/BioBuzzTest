@@ -9,7 +9,7 @@ for live field position.
 - **Package:** `org.firstinspires.ftc.teamcode.util`
 - **Source:** `TeamCode\src\main\java\org\firstinspires\ftc\teamcode\util\RobotHealthMonitor.java`
 - **Field view:** `TeamCode\src\main\java\org\firstinspires\ftc\teamcode\util\Drawing.java`
-- **Wired into:** `CompTeleOp.java`, `CompAuto.java`
+- **Wired into:** `CompTeleOpBase.java` (red and blue TeleOps), `CompAuto.java`
 
 ## Hardware
 

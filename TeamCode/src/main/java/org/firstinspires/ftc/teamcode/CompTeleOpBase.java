@@ -4,7 +4,6 @@ package org.firstinspires.ftc.teamcode;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.subsystems.Adjustor;
@@ -16,13 +15,20 @@ import org.firstinspires.ftc.teamcode.subsystems.Shooter;
 import org.firstinspires.ftc.teamcode.util.Drawing;
 import org.firstinspires.ftc.teamcode.util.RobotHealthMonitor;
 import org.firstinspires.ftc.teamcode.util.Stats;
+import org.firstinspires.ftc.teamcode.util.TagMath;
 
 /*
- * Competition TeleOp TeleOp. Controller bindings live in CompTeleOpControls.java
+ * Competition TeleOp, shared by the RED and BLUE versions (CompTeleOpRed, CompTeleOpBlue): they are identical except for which alliance's
+ * scoring strip of AprilTags the aim button turns to face. Controller bindings live in CompTeleOpControls.java
  * (edit that file to remap buttons). Behavior and automations live here.
  */
-@TeleOp(name = "Competition TeleOp", group = "Competition")
-public class CompTeleOp extends OpMode {
+public abstract class CompTeleOpBase extends OpMode {
+
+    /** "RED" or "BLUE": shown on the screen and used to name the statistics file. */
+    protected abstract String allianceName();
+
+    /** First tag ID of this alliance's scoring strip (AprilTagSettings.RED_STRIP_FIRST_ID or BLUE_STRIP_FIRST_ID). */
+    protected abstract int stripFirstTagId();
 
     private Shooter shooter;
     private Intake intake;
@@ -46,14 +52,14 @@ public class CompTeleOp extends OpMode {
         shooter = new Shooter(hardwareMap);
         intake = new Intake(hardwareMap);
         adjustor = new Adjustor(hardwareMap);
-        goal = GoalTracker.create(hardwareMap); // works without a Limelight in the configuration: aiming is just off
+        goal = GoalTracker.create(hardwareMap, stripFirstTagId()); // works without a Limelight in the configuration: aiming is just off
         // sorter = new Sorter(hardwareMap); // DISABLED (sorter hardware not set up yet)
         follower = Constants.createFollower(hardwareMap);
         follower.update();
         stats = new Stats(telemetry);
-        health = new RobotHealthMonitor(hardwareMap, telemetry, "CompTeleOp");
+        health = new RobotHealthMonitor(hardwareMap, telemetry, "CompTeleOp" + allianceName());
         Drawing.init();
-        telemetry.addData("Status", "Initialized");
+        telemetry.addData("Status", "Initialized: " + allianceName() + " alliance (goal strip tags " + stripFirstTagId() + " to " + (stripFirstTagId() + TagMath.STRIP_OFFSETS.length - 1) + ")");
         telemetry.update();
     }
 
@@ -127,7 +133,7 @@ public class CompTeleOp extends OpMode {
 
         telemetry.addData("shooter velocity (ticks/sec)", "%.0f", shooter.getVelocity());
         telemetry.addData("adjustor", adjustor.getPosition());
-        telemetry.addData("goal tag", goal.status() + (aiming ? (goal.isAimed() ? "  [AIMED]" : "  [AIMING]") : ""));
+        telemetry.addData(allianceName() + " goal strip", goal.status() + (aiming ? (goal.isAimed() ? "  [AIMED]" : "  [AIMING]") : ""));
         telemetry.addData("pose", follower.getPose());
         telemetry.update();
     }
@@ -137,7 +143,7 @@ public class CompTeleOp extends OpMode {
         shooter.stop();
         intake.stop();
         goal.stop();
-        stats.writeSummaryToFile("CompTeleOp");
+        stats.writeSummaryToFile("CompTeleOp" + allianceName());
     }
 
     /**

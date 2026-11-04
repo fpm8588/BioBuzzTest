@@ -1,26 +1,41 @@
 # Limelight 3A: aiming at the goal AprilTag and measuring the range to it
 
-Goal: the robot turns to face its alliance's goal tag and knows how far away it is. Aiming works in TeleOp (hold the driver's right
-bumper) and in the autonomous (a short aim before the shot). The range is shown on the screen now and is what a later step uses to pick
+Goal: the robot turns to face the centre of its alliance's scoring strip of AprilTags and knows how far away it is. Aiming works in TeleOp
+(hold the driver's right bumper) and in the autonomous (a short aim before the shot). The range is shown on the screen now and is what a later step uses to pick
 the shooter speed and the adjustor angle.
 
 | File | What it does |
 | --- | --- |
 | `GoalTagTest.java` | **TeleOp "Goal Tag Test"** (group Test). Never drives. Use it for the whole set-up and check. |
-| `AprilTagSettings.java` | Every number: pipeline slot, goal tag IDs, range method, aiming gains. Editable in Panels. |
-| `subsystems/GoalTracker.java` | Finds the goal tag; gives turn command, aimed, and range. Usable from any OpMode. Works without a Limelight (aiming is just off). |
+| `AprilTagSettings.java` | Every number: pipeline slot, strip IDs, tag size, range method, aiming gains. Editable in Panels. |
+| `subsystems/GoalTracker.java` | Finds the alliance's strip; gives turn command, aimed, and range. Usable from any OpMode. Works without a Limelight (aiming is just off). |
 | `subsystems/Limelight.java` | `getTags()` added: every tag in the frame with ID, angles and 3D pose. |
-| `util/TagMath.java` | The arithmetic (range two ways, aim turn). Unit tested. |
-| `CompTeleOp.java`, `CompAuto.java` | Use it: hold **driver right bumper** to aim; the auto turns to the tag before it shoots. |
+| `util/TagMath.java` | The arithmetic (strip centre, range two ways, aim turn). Unit tested. |
+| `CompTeleOpRed.java`, `CompTeleOpBlue.java` (on the Driver Hub: "Competition TeleOp RED" / "BLUE") | Identical TeleOps (all behaviour is in `CompTeleOpBase`) except for the strip: hold **driver right bumper** to aim at the red or blue strip. |
+| `CompAuto.java` | The auto turns to the strip before it shoots; its alliance is `LeaveAndPark.ROTATE_180` like every autonomous. |
 
-## What I need from the tag pictures
+## The tags (from the printed strips)
 
-Nothing in the code is guessed from the pictures; these are settings you fill in:
+All are family **36h11**. Each strip is four tags in a row, IDs left to right as you face it: two tags, a gap, two tags.
 
-- **ID of each alliance's goal tag** into `AprilTagSettings.GOAL_TAG_ID_RED` / `GOAL_TAG_ID_BLUE` (-1 = "whichever tag is biggest", only fine on a bench).
-- **Tag family** (set in the Limelight pipeline; 36h11 is the usual FTC family).
-- **Printed size**: the black square only, edge to edge, in mm (set in the Limelight pipeline).
-- **Height of the tag's centre above the floor**, inches, into `AprilTagSettings.TAG_CENTRE_HEIGHT_IN`. GoalTagTest also works it out for you from the 3D pose.
+| Strip | IDs | Used for |
+| --- | --- | --- |
+| RED SCORING | 30 31 32 33 | aiming (red alliance) |
+| RED AUDIENCE | 34 35 36 37 | not used yet |
+| BLUE AUDIENCE | 38 39 40 41 | not used yet |
+| BLUE SCORING | 42 43 44 45 | aiming (blue alliance) |
+
+**The robot aims at the strip's centre, not at one tag.** The tags sit at known places along the strip (about -2.0, -0.85, +0.85, +2.0 tag widths
+from the centre, measured off the pictures), so from whichever of the four the camera can see, it works out where the centre is and averages
+the estimates. That needs the tag size: **set `AprilTagSettings.TAG_SIZE_IN`** (the black square, edge to edge, in inches = the pipeline's tag size in mm / 25.4). Without it the
+robot aims at the middle of the tags it can see, which is up to two tag widths off-centre when only part of the strip is in view (about 10 degrees at 70 in with a 6.5 in tag).
+It assumes the robot faces the strip squarely; 25 degrees off square adds about 1 degree of error.
+
+## What you still have to measure
+
+- **Printed size** of a tag: the black square only, edge to edge. In mm in the Limelight pipeline, and in inches in `AprilTagSettings.TAG_SIZE_IN`.
+- **Height of the strip's tags above the floor** (centre of the black square), inches, into `AprilTagSettings.TAG_CENTRE_HEIGHT_IN`. GoalTagTest also works it out for you from the 3D pose.
+- If the shooter is not under the strip's centre, the offsets in Part C step 6.
 
 ## Part A: the Limelight pipeline (laptop)
 
@@ -42,8 +57,8 @@ Auto still run; aiming is simply off and the screen says "no Limelight in the co
 ## Part C: check it with Goal Tag Test (nothing moves)
 
 1. Run **Goal Tag Test**. INIT shows whether the AprilTag pipeline was confirmed and which goal ID it is looking for.
-2. Hold the tag in view. Check: the tag ID is right, `tracker` says `goal tag <ID>`, and the frame age stays under 100 ms.
-3. **Which way it turns.** Move the tag to the right of the picture: `aim would` must say `turn RIGHT`. If it says the opposite, set `AprilTagSettings.INVERT_TX`.
+2. Hold the strip (or any of its tags) in view. Check: tag IDs are right, tags of the strip are marked `*`, `tracker` says `strip 30-33: n tag(s)`, and the frame age stays under 100 ms. Flip `LeaveAndPark.ROTATE_180` in Panels to test the blue strip.
+3. **Which way it turns.** Move the strip to the right of the picture: `aim would` must say `turn RIGHT`. If it says the opposite, set `AprilTagSettings.INVERT_TX`.
 4. **Range.** Put the camera a measured distance from the tag (along the floor, lens to the foot of the tag) and type that into `GoalTagTest.KNOWN_DISTANCE_IN`. The screen shows the error of each method:
    - *3D pose* needs the correct tag size in the pipeline (Part A step 4). Good to a few percent when it is.
    - *vertical angle* needs `TAG_CENTRE_HEIGHT_IN`, and the camera height and tilt in `PollenSettings`.
@@ -54,9 +69,9 @@ Auto still run; aiming is simply off and the screen says "no Limelight in the co
 
 ## Part D: on the robot
 
-- **TeleOp.** Hold the driver's right bumper: the robot turns to the tag while the driver still drives. The screen shows `[AIMING]` then `[AIMED]`. If the tag is not in view the driver keeps the turn.
-- **Autonomous.** At the score pose the shooter spins up while the robot turns to the tag, then the intake feeds. If no goal tag is in view after `AUTO_NO_TAG_SKIP_SEC` (0.4 s) it skips the aim; it never aims longer than `AUTO_AIM_TIMEOUT_SEC` (1.5 s).
-- **From your own OpMode:** `GoalTracker goal = GoalTracker.create(hardwareMap);` then each loop `goal.update();` and read `hasGoal()`, `getAimTurn()` (Pedro's turn sign, for `setTeleOpDrive`), `isAimed()`, `getDistanceIn()`.
+- **TeleOp.** Pick **Competition TeleOp RED** or **BLUE** on the Driver Hub. Hold the driver's right bumper: the robot turns to the strip while the driver still drives. The screen shows `[AIMING]` then `[AIMED]`. If no tag of the strip is in view the driver keeps the turn.
+- **Autonomous.** At the score pose the shooter spins up while the robot turns to the strip, then the intake feeds. If no tag of the strip is in view after `AUTO_NO_TAG_SKIP_SEC` (0.4 s) it skips the aim; it never aims longer than `AUTO_AIM_TIMEOUT_SEC` (1.5 s).
+- **From your own OpMode:** `GoalTracker goal = GoalTracker.create(hardwareMap, AprilTagSettings.RED_STRIP_FIRST_ID);` (or `BLUE_...`; without the second argument it follows `LeaveAndPark.ROTATE_180`), then each loop `goal.update();` and read `hasGoal()`, `getAimTurn()` (Pedro's turn sign, for `setTeleOpDrive`), `isAimed()`, `getDistanceIn()`.
 
 **Tuning**
 
@@ -65,13 +80,15 @@ Auto still run; aiming is simply off and the screen says "no Limelight in the co
 | Turns the wrong way | `INVERT_TX` |
 | Swings past the tag and back | lower `K_TURN` or `MAX_TURN` |
 | Stops short, never quite faces it | lower `AIM_TOLERANCE_DEG`, raise `MIN_TURN` |
-| Picks the wrong tag | set `GOAL_TAG_ID_RED` / `_BLUE`; filter IDs in the pipeline |
+| Aims off to one side when only part of the strip is in view | set `TAG_SIZE_IN` (the screen says `NOT centred` until it is) |
+| Aims at the wrong strip | check which TeleOp you picked (RED / BLUE) and `ROTATE_180` for the auto |
 | Range reads high or low by a constant percentage | tag size in the pipeline (3D pose) or `TAG_CENTRE_HEIGHT_IN` / camera height and tilt (vertical angle) |
 | Loses the tag while turning | lower exposure; lower `MAX_TURN` |
 
 ## Limits you must know
 
-- **The camera has to be able to see the tag.** The camera is on the pollen mount (`PollenSettings`: 3 in above the floor, looking level, 42 degree lens, which was set for finding pollen on the floor). A tag high on the goal is above the top of that picture when the robot is close. For example, a tag centre 29.5 in up (an example number, not this season's) is out of view closer than about **69 in**. GoalTagTest prints `closest the tag stays in view` once `TAG_CENTRE_HEIGHT_IN` is set; if that is farther than you shoot from, the camera has to be raised or tilted up (`PollenSettings.CAMERA_PITCH_DEG`, negative = up) for the goal. That conflicts with looking at the floor for pollen: two cameras or a different mount may be needed.
+- **The camera has to be able to see the tag.** The camera is on the pollen mount (`PollenSettings`: 3 in above the floor, looking level, 42 degree lens, which was set for finding pollen on the floor). A strip high on the goal is above the top of that picture when the robot is close. For example, a tag centre 29.5 in up (an example number, not this season's) is out of view closer than about **69 in**. GoalTagTest prints `closest the tag stays in view` once `TAG_CENTRE_HEIGHT_IN` is set; if that is farther than you shoot from, the camera has to be raised or tilted up (`PollenSettings.CAMERA_PITCH_DEG`, negative = up) for the goal. That conflicts with looking at the floor for pollen: two cameras or a different mount may be needed.
+- The audience strips (34 to 41) are not used. They could be used later to correct the robot's position on the field.
 - Aiming only turns the robot. It does not drive to a distance.
 - The Limelight frame is up to 100 ms old and the robot keeps turning meanwhile, so a fast turn overshoots a little. Hence the low gains.
 - Not checked here: the Limelight web-interface wording; that `LLResultTypes.FiducialResult` has `getFiducialId()`, `getTargetXDegrees()`, `getTargetYDegrees()`, `getTargetArea()` and `getTargetPoseCameraSpace()` under those names in SDK 11.0, and that its pose is in the camera frame used here (x right, y down, z forward, metres). Nothing has been run on the robot.

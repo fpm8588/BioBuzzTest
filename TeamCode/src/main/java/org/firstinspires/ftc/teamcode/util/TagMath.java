@@ -53,6 +53,81 @@ public final class TagMath {
         return best;
     }
 
+    // ---- a strip of tags ----
+
+    /**
+     * Where each tag of a scoring strip sits along it, measured from the strip's centre in tag widths (negative = to the left as you
+     * face the strip), read off the printed strips: two tags, a gap, two tags. The IDs run left to right (30 31 | 32 33 for red).
+     */
+    public static final double[] STRIP_OFFSETS = {-2.0, -0.845, 0.845, 2.0};
+
+    /** What the camera makes of a strip of tags: where its centre is, and how far away. */
+    public static final class Strip {
+        /** Degrees the strip's centre is to the right of the crosshair (average over the tags in view). */
+        public final double txDeg;
+        /** Degrees the strip is above the crosshair (average over the tags in view). */
+        public final double tyDeg;
+        /** Distance along the floor from the camera to the strip's centre, inches; NaN if no tag in view has a pose. */
+        public final double poseDistanceIn;
+        /** The biggest tag of the strip in view. */
+        public final int bestId;
+        public final double bestArea;
+        public final int tagsUsed;
+        /** true if every tag was corrected to the strip's centre; false if some were taken as they are (no tag size, or no pose). */
+        public final boolean centred;
+
+        Strip(double txDeg, double tyDeg, double poseDistanceIn, int bestId, double bestArea, int tagsUsed, boolean centred) {
+            this.txDeg = txDeg;
+            this.tyDeg = tyDeg;
+            this.poseDistanceIn = poseDistanceIn;
+            this.bestId = bestId;
+            this.bestArea = bestArea;
+            this.tagsUsed = tagsUsed;
+            this.centred = centred;
+        }
+    }
+
+    /**
+     * Combines the tags in view that belong to a strip (IDs firstId to firstId + STRIP_OFFSETS.length - 1) into one aim point: the
+     * strip's CENTRE. Each tag is a known number of tag widths from the centre, so from its camera-space position the centre is
+     * at lateral (x - offset * tagSize), at the same forward distance, assuming the robot faces the strip squarely; the centre
+     * directions of all tags in view are averaged. With no tag size (tagSizeIn <= 0) or no pose, a tag is taken as it is, which
+     * aims at the middle of the tags in view instead of the middle of the strip.
+     *
+     * @return null if no tag of the strip is in view
+     */
+    public static Strip strip(List<Tag> tags, int firstId, double tagSizeIn, double pitchDownDeg) {
+        double txSum = 0, tySum = 0, distSum = 0;
+        int n = 0, withDist = 0;
+        boolean centred = true;
+        Tag best = null;
+        for (Tag t : tags) {
+            int k = t.id - firstId;
+            if (k < 0 || k >= STRIP_OFFSETS.length) continue;
+            double tx = t.txDeg;
+            if (tagSizeIn > 0 && t.hasPose()) {
+                double p = Math.toRadians(pitchDownDeg);
+                double forward = t.camZIn * Math.cos(p) - t.camYIn * Math.sin(p);
+                double lateral = t.camXIn - STRIP_OFFSETS[k] * tagSizeIn;
+                tx = Math.toDegrees(Math.atan2(lateral, forward));
+                distSum += Math.hypot(lateral, forward);
+                withDist++;
+            } else {
+                centred = false;
+                if (t.hasPose()) {
+                    distSum += poseDistanceIn(t.camXIn, t.camYIn, t.camZIn, pitchDownDeg);
+                    withDist++;
+                }
+            }
+            txSum += tx;
+            tySum += t.tyDeg;
+            n++;
+            if (best == null || t.area > best.area) best = t;
+        }
+        if (n == 0) return null;
+        return new Strip(txSum / n, tySum / n, withDist == 0 ? Double.NaN : distSum / withDist, best.id, best.area, n, centred);
+    }
+
     // ---- range ----
 
     /**

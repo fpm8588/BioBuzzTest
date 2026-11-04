@@ -73,7 +73,7 @@ servo port of either hub. Directions are set in code: don't reverse anything in 
 `Shooter.SHOOT_ONE_REVERSED` / `SHOOT_TWO_REVERSED`. The shooter speeds are in **ticks per second** (`Shooter.LOW_VELOCITY` 1100,
 `HIGH_VELOCITY` 1400, the values from last year), set with `setVelocity`, so what they mean in RPM depends on the motor and any gearing.
 
-Still switched off in `CompTeleOp` and `CompAuto` (their code is commented out and marked `DISABLED`): the **sorter**
+Still switched off in `CompTeleOpBase` (the red and blue TeleOps) and `CompAuto` (their code is commented out and marked `DISABLED`): the **sorter**
 (`sortOne`, `sortTwo` servos) and the **Limelight** (`limelight`, Ethernet device). To bring one back, uncomment its lines and add its
 devices to the config.
 
