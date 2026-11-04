@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.subsystems.Adjustor;
+import org.firstinspires.ftc.teamcode.subsystems.GoalTracker;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Shooter;
 // DISABLED (sorter hardware not set up yet): re-enable with the sorter code below.
@@ -26,6 +27,7 @@ public class CompTeleOp extends OpMode {
     private Shooter shooter;
     private Intake intake;
     private Adjustor adjustor;
+    private GoalTracker goal;
     // DISABLED (sorter hardware not set up yet):
     // private Sorter sorter;
     private Follower follower;
@@ -44,6 +46,7 @@ public class CompTeleOp extends OpMode {
         shooter = new Shooter(hardwareMap);
         intake = new Intake(hardwareMap);
         adjustor = new Adjustor(hardwareMap);
+        goal = GoalTracker.create(hardwareMap); // works without a Limelight in the configuration: aiming is just off
         // sorter = new Sorter(hardwareMap); // DISABLED (sorter hardware not set up yet)
         follower = Constants.createFollower(hardwareMap);
         follower.update();
@@ -70,6 +73,9 @@ public class CompTeleOp extends OpMode {
         slowActive = CompTeleOpControls.slowMode(driver, operator);
         double speed = slowActive ? 0.4 : 1.0;
         axial *= speed; lateral *= speed; yaw *= speed;
+        goal.update();
+        boolean aiming = CompTeleOpControls.aimAtGoal(driver, operator) && goal.hasGoal();
+        if (aiming) yaw = goal.getAimTurn(); // the aim takes over the turning only; the driver still translates
         follower.setTeleOpDrive(axial, lateral, yaw, false); // last arg: true = robot-centric
         follower.update();
 
@@ -121,6 +127,7 @@ public class CompTeleOp extends OpMode {
 
         telemetry.addData("shooter velocity (ticks/sec)", "%.0f", shooter.getVelocity());
         telemetry.addData("adjustor", adjustor.getPosition());
+        telemetry.addData("goal tag", goal.status() + (aiming ? (goal.isAimed() ? "  [AIMED]" : "  [AIMING]") : ""));
         telemetry.addData("pose", follower.getPose());
         telemetry.update();
     }
@@ -129,6 +136,7 @@ public class CompTeleOp extends OpMode {
     public void stop() {
         shooter.stop();
         intake.stop();
+        goal.stop();
         stats.writeSummaryToFile("CompTeleOp");
     }
 

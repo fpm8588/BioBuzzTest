@@ -20,6 +20,10 @@ public class CompTeleOpControls {
     // ===== SLOW MODE =====
     public static boolean slowMode(Gamepad driver, Gamepad operator) { return driver.left_trigger > 0.5; }
 
+    // ===== AIM AT GOAL =====
+    // Hold to turn the robot to face the alliance's goal AprilTag (the driver still drives; only the turning is taken over)
+    public static boolean aimAtGoal(Gamepad driver, Gamepad operator) { return driver.right_bumper; }
+
     // ===== ACTIONS =====
     // Shooter high-velocity preset
     public static boolean shooterHigh(Gamepad driver, Gamepad operator) { return operator.right_trigger > 0.1; }

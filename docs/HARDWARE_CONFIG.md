@@ -19,13 +19,13 @@ Nothing else needs to be configured for driving. Competition TeleOp and Competit
 shooter and adjustor devices (see **Auxiliary systems** below) and **fail at INIT if they are not in the active
 configuration**. The Limelight is only used by the vision OpModes (next section).
 
-## Limelight 3A (only for Pollen Vision Test and Pollen Chase)
+## Limelight 3A (vision OpModes, and goal-tag aiming in Competition TeleOp / Auto)
 
 | Type | Plugs into | Config name | Notes |
 | --- | --- | --- | --- |
 | Limelight 3A (appears as a USB / Ethernet device) | Control Hub blue **USB 3.0** port | `limelight` | Scan in Configure Robot, tap its name and rename it exactly `limelight`. |
 
-Full camera setup is in `LIMELIGHT_POLLEN.md`. The other OpModes do not need it.
+Full camera setup is in `LIMELIGHT_POLLEN.md` (pollen) and `LIMELIGHT_APRILTAG.md` (goal tag). Competition TeleOp and Auto use it for aiming but still run without it (aiming is off); the other OpModes do not need it.
 
 Directions are set in code, so don't reverse anything in the config. Configure each drive motor as whichever
 motor type you actually have.

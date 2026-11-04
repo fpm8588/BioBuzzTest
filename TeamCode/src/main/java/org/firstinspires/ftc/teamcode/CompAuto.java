@@ -10,10 +10,9 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+import org.firstinspires.ftc.teamcode.subsystems.GoalTracker;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Shooter;
-// DISABLED (Limelight not part of this auto yet):
-// import org.firstinspires.ftc.teamcode.subsystems.Limelight;
 import org.firstinspires.ftc.teamcode.util.Drawing;
 import org.firstinspires.ftc.teamcode.util.RobotHealthMonitor;
 import org.firstinspires.ftc.teamcode.util.Stats;
@@ -25,7 +24,7 @@ import org.firstinspires.ftc.teamcode.util.Stats;
  * (the Pedro visualizer at https://visualizer.pedropathing.com helps).
  *
  * This is a test-build skeleton: it demonstrates driving to a pose, running the
- * shooter/intake for a timed scoring window, reading the Limelight, and parking.
+ * shooter/intake for a timed scoring window (after turning to face the goal AprilTag), and parking.
  * Replace the scoring logic and poses once this season's field/game is known.
  */
 @Autonomous(name = "Competition Auto", group = "Competition")
@@ -37,7 +36,7 @@ public class CompAuto extends LinearOpMode {
 
     private Shooter shooter;
     private Intake intake;
-    // private Limelight limelight; // DISABLED (Limelight not part of this auto yet)
+    private GoalTracker goal;
     private Stats stats;
     private RobotHealthMonitor health;
 
@@ -70,11 +69,26 @@ public class CompAuto extends LinearOpMode {
                 break;
             case 1:
                 if (!follower.isBusy()) {
+                    // Spin the shooter up while turning to face the goal tag (skipped if the tag is not in view),
+                    // then feed.
                     shooter.spinAtHigh();
+                    follower.startTeleopDrive();
+                    setPathState(14);
+                }
+                break;
+            case 14: {
+                boolean seen = goal.hasGoal();
+                double t = pathTimer.getElapsedTimeSeconds();
+                follower.setTeleOpDrive(0, 0, seen ? goal.getAimTurn() : 0, true);
+                boolean done = seen ? (goal.isAimed() || t > AprilTagSettings.AUTO_AIM_TIMEOUT_SEC)
+                        : t > AprilTagSettings.AUTO_NO_TAG_SKIP_SEC;
+                if (done) {
+                    follower.setTeleOpDrive(0, 0, 0, true);
                     intake.intakeIn();
                     setPathState(15);
                 }
                 break;
+            }
             case 15:
                 if (pathTimer.getElapsedTimeSeconds() > SCORE_DURATION_SEC) {
                     shooter.stop();
@@ -103,7 +117,7 @@ public class CompAuto extends LinearOpMode {
         follower = Constants.createFollower(hardwareMap);
         shooter = new Shooter(hardwareMap);
         intake = new Intake(hardwareMap);
-        // limelight = new Limelight(hardwareMap); // DISABLED (Limelight not part of this auto yet)
+        goal = GoalTracker.create(hardwareMap); // works without a Limelight in the configuration: the aim step is skipped
         stats = new Stats(telemetry);
         health = new RobotHealthMonitor(hardwareMap, telemetry, "CompAuto");
         Drawing.init();
@@ -118,7 +132,7 @@ public class CompAuto extends LinearOpMode {
 
         while (opModeIsActive()) {
             follower.update();
-            // limelight.update(); // DISABLED (Limelight not part of this auto yet)
+            goal.update();
             autonomousPathUpdate();
             stats.trackPose(follower.getPose());
             health.update();
@@ -128,14 +142,14 @@ public class CompAuto extends LinearOpMode {
             telemetry.addData("x", follower.getPose().getX());
             telemetry.addData("y", follower.getPose().getY());
             telemetry.addData("heading", follower.getPose().getHeading());
-            // telemetry.addData("limelight target", limelight.hasTarget()); // DISABLED (Limelight not part of this auto yet)
+            telemetry.addData("goal tag", goal.status());
             telemetry.update();
             stats.update();
         }
 
         shooter.stop();
         intake.stop();
-        // limelight.stop();
+        goal.stop();
         stats.writeSummaryToFile("CompAuto");
     }
 }
