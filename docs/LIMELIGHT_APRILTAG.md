@@ -13,6 +13,7 @@ the shooter speed and the adjustor angle.
 | `util/TagMath.java` | The arithmetic (strip centre, range two ways, aim turn). Unit tested. |
 | `CompTeleOpRed.java`, `CompTeleOpBlue.java` (on the Driver Hub: "Competition TeleOp RED" / "BLUE") | Identical TeleOps (all behaviour is in `CompTeleOpBase`) except for the strip: hold **driver right bumper** to aim at the red or blue strip. |
 | `CompAuto.java` | The auto turns to the strip before it shoots; its alliance is `LeaveAndPark.ROTATE_180` like every autonomous. |
+| `ShootOnTags.java`, `ShootOnTagsTest.java` | Drive to the shooting position under the CELLs and shoot (see `SHOOT_ON_TAGS.md`). |
 
 ## The tags (from the printed strips)
 
@@ -42,7 +43,7 @@ It assumes the robot faces the strip squarely; 25 degrees off square adds about 
 These steps are from my memory of the Limelight docs; menu names can differ a little in your firmware version.
 
 1. Connect the Limelight to a laptop by USB-C or Ethernet and open `http://limelight.local:5801` (or `172.29.0.1:5801` over USB).
-2. Pick an **empty pipeline slot** (not the pollen or robot-colour ones). The code assumes slot **3**; if you use another, change `AprilTagSettings.APRILTAG_PIPELINE`. Name it `apriltag`.
+2. Pick an **empty pipeline slot** (not the pollen or robot-colour ones). The code uses slot **2** (the team's AprilTag pipeline); if you use another, change `AprilTagSettings.APRILTAG_PIPELINE`. Name it `apriltag`.
 3. Set the pipeline type to the AprilTag one ("Fiducial Markers" / "AprilTag").
 4. Set the **tag family** and the **tag size in mm** (the black square). A wrong size makes the 3D range wrong by the same percentage.
 5. Optional: filter to only the goal tag IDs, so other tags cannot be picked.
@@ -87,7 +88,7 @@ Auto still run; aiming is simply off and the screen says "no Limelight in the co
 
 ## Limits you must know
 
-- **The camera has to be able to see the tag.** The camera is on the pollen mount (`PollenSettings`: 3 in above the floor, looking level, 42 degree lens, which was set for finding pollen on the floor). A strip high on the goal is above the top of that picture when the robot is close. For example, a tag centre 29.5 in up (an example number, not this season's) is out of view closer than about **69 in**. GoalTagTest prints `closest the tag stays in view` once `TAG_CENTRE_HEIGHT_IN` is set; if that is farther than you shoot from, the camera has to be raised or tilted up (`PollenSettings.CAMERA_PITCH_DEG`, negative = up) for the goal. That conflicts with looking at the floor for pollen: two cameras or a different mount may be needed.
+- **The camera has to be able to see the tag.** The camera is on the pollen mount (`PollenSettings`: 3 in above the floor, looking level, 42 degree lens, which was set for finding pollen on the floor). The strips hang under the CELLs high on the HIVE (about 37 in and 51 in up by the drawing, see `SHOOT_ON_TAGS.md`), above the top of that picture when the robot is close. For example, a tag centre 29.5 in up (an example number, not this season's) is out of view closer than about **69 in**. GoalTagTest prints `closest the tag stays in view` once `TAG_CENTRE_HEIGHT_IN` is set; if that is farther than you shoot from, the camera has to be raised or tilted up (`PollenSettings.CAMERA_PITCH_DEG`, negative = up) for the goal. That conflicts with looking at the floor for pollen: two cameras or a different mount may be needed.
 - The audience strips (34 to 41) are not used. They could be used later to correct the robot's position on the field.
 - Aiming only turns the robot. It does not drive to a distance.
 - The Limelight frame is up to 100 ms old and the robot keeps turning meanwhile, so a fast turn overshoots a little. Hence the low gains.

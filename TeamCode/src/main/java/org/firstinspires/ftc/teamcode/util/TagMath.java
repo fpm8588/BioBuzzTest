@@ -177,6 +177,22 @@ public final class TagMath {
         return rise / Math.tan(top);
     }
 
+    /** How many degrees above horizontal the tag centre is seen from the lens, at a horizontal distance from it. */
+    public static double tagElevationDeg(double cameraHeightIn, double tagCentreHeightIn, double horizontalDistanceIn) {
+        return Math.toDegrees(Math.atan2(tagCentreHeightIn - cameraHeightIn, horizontalDistanceIn));
+    }
+
+    /** The camera tilt (degrees below horizontal; NEGATIVE = tilted up) that puts the tag centre in the middle of the picture at that distance. */
+    public static double pitchToCentreTagDeg(double cameraHeightIn, double tagCentreHeightIn, double horizontalDistanceIn) {
+        return -tagElevationDeg(cameraHeightIn, tagCentreHeightIn, horizontalDistanceIn);
+    }
+
+    /** Is the tag centre inside the picture, vertically, at that distance with the camera tilted pitchDownDeg? */
+    public static boolean tagInVerticalView(double cameraHeightIn, double pitchDownDeg, double verticalFovDeg, double tagCentreHeightIn, double horizontalDistanceIn) {
+        double fromAxis = tagElevationDeg(cameraHeightIn, tagCentreHeightIn, horizontalDistanceIn) + pitchDownDeg;   // above the lens axis
+        return Math.abs(fromAxis) <= verticalFovDeg / 2;
+    }
+
     // ---- aiming ----
 
     public static final class AimGains {

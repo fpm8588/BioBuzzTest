@@ -16,8 +16,8 @@ public class AprilTagSettings {
 
     // ---- Limelight ----
 
-    /** Pipeline slot (0 to 9) holding the AprilTag pipeline in the Limelight web interface. Must not be a slot another pipeline uses. */
-    public static int APRILTAG_PIPELINE = 3;
+    /** Pipeline slot (0 to 9) holding the AprilTag pipeline in the Limelight web interface. Slot 2 is the team's AprilTag pipeline. It must not be a slot another pipeline uses (ObstacleSettings.PIPELINE_BLUE_ROBOTS is also 2: it is only used if PIPELINE_OVERRIDE is turned off). */
+    public static int APRILTAG_PIPELINE = 2;
 
     /** Ignore results older than this many milliseconds. */
     public static long MAX_STALENESS_MS = 100;
