@@ -7,6 +7,7 @@ import com.pedropathing.paths.PathBuilder;
 import com.pedropathing.paths.PathChain;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.subsystems.AuxSettings;
 import org.firstinspires.ftc.teamcode.util.LeaveParkPlan;
 import org.firstinspires.ftc.teamcode.util.RoutePolyline;
 import org.firstinspires.ftc.teamcode.util.ShootPlan;
@@ -78,6 +79,9 @@ final class ShootSetup {
             (LeaveAndPark.ENFORCE_FIELD_CHECKS ? s.blocking : s.warnings).add(p);
         }
 
+        if (!AuxSettings.ENABLED) {
+            s.warnings.add("The auxiliary systems (intake, shooter, adjustor) are DISABLED (AuxSettings.ENABLED = false): the robot will drive to the shooting position and not shoot.");
+        }
         if (ShootSettings.HIVE_CENTRE_X_IN != 72.0 || ShootSettings.HIVE_CENTRE_Y_IN != 72.0) {
             s.warnings.add("The HIVE centre is not the field centre: the shooting position moves with it, but the route's keep-out area stays centred on the field centre.");
         }

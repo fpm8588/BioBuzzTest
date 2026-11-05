@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+import org.firstinspires.ftc.teamcode.subsystems.AuxSettings;
 import org.firstinspires.ftc.teamcode.subsystems.GoalTracker;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Shooter;
@@ -90,7 +91,7 @@ public class CompAuto extends LinearOpMode {
                 break;
             }
             case 15:
-                if (pathTimer.getElapsedTimeSeconds() > SCORE_DURATION_SEC) {
+                if (pathTimer.getElapsedTimeSeconds() > (AuxSettings.ENABLED ? SCORE_DURATION_SEC : 0)) {
                     shooter.stop();
                     intake.stop();
                     stats.recordShot(true);

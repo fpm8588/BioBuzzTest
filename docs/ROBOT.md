@@ -1,6 +1,8 @@
 # Robot Subsystems
 
 Living knowledge base of this robot's subsystems, maintained by the team via ftc-toolchain.
+
+**The Intake, Shooter and Adjustor are currently DISABLED** (`subsystems/AuxSettings.ENABLED = false`): no hardware is looked up and every command is a no-op. See `HARDWARE_CONFIG.md` to bring them back.
 Read these before writing OpModes so you know each subsystem's hardware, config names, and quirks.
 
 | Subsystem | Summary |

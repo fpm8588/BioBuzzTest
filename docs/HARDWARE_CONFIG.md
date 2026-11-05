@@ -15,9 +15,9 @@ the ones in the code.
 | Motor | 3 | `rb` | Drive, back-right. **Strafe dead wheel plugs into this port's encoder connector** | FORWARD |
 | I2C bus 0 | built-in | `imu` | Control Hub IMU (heading for Pedro) | n/a |
 
-Nothing else needs to be configured for driving. Competition TeleOp and Competition Auto also look up the intake,
-shooter and adjustor devices (see **Auxiliary systems** below) and **fail at INIT if they are not in the active
-configuration**. The Limelight is only used by the vision OpModes (next section).
+Nothing else needs to be configured for driving. The auxiliary systems (intake, shooter, adjustor; see **Auxiliary systems** below)
+are **switched off** (`AuxSettings.ENABLED = false`), so those devices need not be in the configuration. When they are switched
+back on, Competition TeleOp, Competition Auto and Shoot On Tags **fail at INIT if the devices are not in the active configuration**. The Limelight is only used by the vision OpModes (next section).
 
 ## Limelight 3A (vision OpModes, and goal-tag aiming in Competition TeleOp / Auto)
 
@@ -59,7 +59,12 @@ motor type you actually have.
 5. `RobotHealthMonitor` reads velocity on every motor, so on `rf` and `rb` it reports the pod's velocity.
    Ignore stall warnings from those two.
 
-## Auxiliary systems (intake, shooter, shot-angle adjustor)
+## Auxiliary systems (intake, shooter, shot-angle adjustor): CURRENTLY DISABLED
+
+**They are switched off:** `subsystems/AuxSettings.java` has `ENABLED = false`. While it is false the `Intake`, `Shooter` and `Adjustor` classes do not look up
+any hardware and every command does nothing, so the four devices below do not have to be in the configuration, and the OpModes that use them (the TeleOps,
+Competition Auto, Shoot On Tags, the three bench tests) still run (Shoot On Tags drives to the shooting position and does not shoot; the bench tests say DISABLED).
+**To bring them back:** set `ENABLED = true`, rebuild, and add the Expansion Hub and these devices to the configuration:
 
 | Config name | Type | Subsystem | Notes |
 | --- | --- | --- | --- |

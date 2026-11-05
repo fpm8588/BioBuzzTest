@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.subsystems.Adjustor;
+import org.firstinspires.ftc.teamcode.subsystems.AuxSettings;
 import org.firstinspires.ftc.teamcode.subsystems.GoalTracker;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Shooter;
@@ -148,7 +149,10 @@ public class ShootOnTags extends LinearOpMode {
                     }
 
                     case SHOOT:
-                        if (now - spinStart >= ShootSettings.SPINUP_SEC) {
+                        if (!AuxSettings.ENABLED) {
+                            note = "auxiliary systems are disabled (AuxSettings.ENABLED): in position, not shooting";
+                            enter(State.DONE, now);
+                        } else if (now - spinStart >= ShootSettings.SPINUP_SEC) {
                             if (feedStart < 0) feedStart = now;
                             intake.intakeIn();
                             note = "feeding";

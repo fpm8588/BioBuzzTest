@@ -41,6 +41,9 @@ public class TestAdjustor extends OpMode {
             adjustor.nudge(-0.02);
         }
 
+        if (!adjustor.isEnabled()) {
+            telemetry.addLine("DISABLED: AuxSettings.ENABLED is false, so this does nothing and needs no hardware.");
+        }
         telemetry.addData("subsystem", "Adjustor");
         telemetry.addData("position (last commanded)", adjustor.getPosition());
         telemetry.update();

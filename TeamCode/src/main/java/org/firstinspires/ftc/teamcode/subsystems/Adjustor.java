@@ -14,6 +14,7 @@ public class Adjustor {
 
     private Servo adjustor;
     private double position;
+    private final boolean enabled;   // AuxSettings.ENABLED when created: false = no hardware, every command does nothing
 
     // Hardware configuration names (must match the Driver Station config)
     public static final String ADJUSTOR_NAME = "adjustor";
@@ -28,8 +29,16 @@ public class Adjustor {
     public static double MAX_POSITION = 1.0;
 
     public Adjustor(HardwareMap hardwareMap) {
+        enabled = AuxSettings.ENABLED;
+        position = Double.NaN;
+        if (!enabled) return;
         adjustor = hardwareMap.get(Servo.class, ADJUSTOR_NAME);
         position = Double.NaN; // a servo cannot report where it is until it has been told
+    }
+
+    /** false when AuxSettings.ENABLED was off at creation: nothing is connected and nothing moves. */
+    public boolean isEnabled() {
+        return enabled;
     }
 
     /** Move the adjustor to its high preset. */
@@ -49,6 +58,7 @@ public class Adjustor {
 
     /** Move the adjustor to any position (0 to 1, limited to MIN_POSITION..MAX_POSITION). */
     public void setPosition(double target) {
+        if (!enabled) return;
         position = Math.max(MIN_POSITION, Math.min(MAX_POSITION, target));
         adjustor.setPosition(position);
     }
