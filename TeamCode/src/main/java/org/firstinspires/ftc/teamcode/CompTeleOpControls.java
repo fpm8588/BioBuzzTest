@@ -20,10 +20,6 @@ public class CompTeleOpControls {
     // ===== SLOW MODE =====
     public static boolean slowMode(Gamepad driver, Gamepad operator) { return driver.left_trigger > 0.5; }
 
-    // ===== AIM AT GOAL =====
-    // Hold to turn the robot to face the alliance's goal AprilTag (the driver still drives; only the turning is taken over)
-    public static boolean aimAtGoal(Gamepad driver, Gamepad operator) { return driver.right_bumper; }
-
     // ===== ACTIONS =====
     // Shooter high-velocity preset
     public static boolean shooterHigh(Gamepad driver, Gamepad operator) { return operator.right_trigger > 0.1; }
@@ -33,12 +29,12 @@ public class CompTeleOpControls {
     public static boolean intakeIn(Gamepad driver, Gamepad operator) { return operator.dpad_up; }
     // Intake out / reject
     public static boolean intakeOut(Gamepad driver, Gamepad operator) { return operator.dpad_left; }
-    // Shot-angle adjustor to its high position
-    public static boolean adjustorHigh(Gamepad driver, Gamepad operator) { return operator.x; }
-    // Shot-angle adjustor to its middle position
-    public static boolean adjustorMid(Gamepad driver, Gamepad operator) { return operator.a; }
-    // Shot-angle adjustor to its low position
-    public static boolean adjustorLow(Gamepad driver, Gamepad operator) { return operator.b; }
+    // Lift to top position
+    public static boolean liftUp(Gamepad driver, Gamepad operator) { return operator.x; }
+    // Lift to middle position
+    public static boolean liftMid(Gamepad driver, Gamepad operator) { return operator.a; }
+    // Lift to bottom position
+    public static boolean liftDown(Gamepad driver, Gamepad operator) { return operator.b; }
     // Route to left gate
     public static boolean sortLeft(Gamepad driver, Gamepad operator) { return operator.left_bumper; }
     // Route to right gate

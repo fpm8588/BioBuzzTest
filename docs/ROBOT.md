@@ -1,17 +1,15 @@
 # Robot Subsystems
 
 Living knowledge base of this robot's subsystems, maintained by the team via ftc-toolchain.
-
-**The Intake, Shooter and Adjustor are currently DISABLED** (`subsystems/AuxSettings.ENABLED = false`): no hardware is looked up and every command is a no-op. See `HARDWARE_CONFIG.md` to bring them back.
 Read these before writing OpModes so you know each subsystem's hardware, config names, and quirks.
 
 | Subsystem | Summary |
 | --- | --- |
-| [Intake](subsystems\Intake.md) | Single-motor intake (`intake`) |
-| [Adjustor](subsystems\Adjustor.md) | Shot-angle adjustor servo (replaces the old Lift) |
+| [Intake](subsystems\Intake.md) | <!-- @ftc-toolchain generated: subsystem-doc — scaffolded; team edits expected --> |
+| [Lift](subsystems\Lift.md) | <!-- @ftc-toolchain generated: subsystem-doc — scaffolded; team edits expected --> |
 | [Limelight](subsystems\Limelight.md) | <!-- @ftc-toolchain generated: subsystem-doc — scaffolded; team edits expected --> |
-| [Shooter](subsystems\Shooter.md) | Two opposed flywheels (`shoot1`, `shoot2`) run on velocity |
+| [Shooter](subsystems\Shooter.md) | <!-- @ftc-toolchain generated: subsystem-doc — scaffolded; team edits expected --> |
 | [Sorter](subsystems\Sorter.md) | <!-- @ftc-toolchain generated: subsystem-doc — scaffolded; team edits expected --> |
 | [RobotHealthMonitor](subsystems\RobotHealthMonitor.md) | Live power/health dashboard + field position, hosted via Panels |
 
-See also: [Odometry / dead-wheel placement](ODOMETRY.md), [Limelight pollen vision](LIMELIGHT_POLLEN.md), [Limelight obstacle avoidance](LIMELIGHT_OBSTACLES.md), [Limelight goal AprilTag](LIMELIGHT_APRILTAG.md), [Shoot On Tags](SHOOT_ON_TAGS.md)
+See also: [Odometry / dead-wheel placement](ODOMETRY.md), [Limelight pollen vision](LIMELIGHT_POLLEN.md), [Limelight obstacle avoidance](LIMELIGHT_OBSTACLES.md)

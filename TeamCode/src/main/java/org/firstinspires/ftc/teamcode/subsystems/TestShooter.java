@@ -2,6 +2,7 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 /*
@@ -12,6 +13,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
      *   b -> spinAtHigh()
  *   back (always) -> stop()
  */
+@Disabled // hidden: drive + dead wheels only build (remove to re-enable)
 @TeleOp(name = "Test Shooter", group = "subsystems")
 public class TestShooter extends OpMode {
 
@@ -35,11 +37,7 @@ public class TestShooter extends OpMode {
             shooter.stop();
         }
 
-        if (!shooter.isEnabled()) {
-            telemetry.addLine("DISABLED: AuxSettings.ENABLED is false, so this does nothing and needs no hardware.");
-        }
-        telemetry.addData("subsystem", "Shooter (shoot1 + shoot2)");
-        telemetry.addData("velocity (ticks/sec)", "%.0f", shooter.getVelocity());
+        telemetry.addData("subsystem", "Shooter");
         telemetry.update();
     }
 }

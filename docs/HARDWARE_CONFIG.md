@@ -1,9 +1,7 @@
-# Robot configuration chart (Driver Hub)
+# Robot configuration chart (Driver Hub): drive motors + dead wheels only
 
-The drive (four motors, two dead wheels, IMU) is on the Control Hub. The auxiliary systems (intake, the two shooter
-wheels, the shot-angle adjustor) need the devices in the second table below, and the Control Hub's four motor ports
-are all taken by the drive, so **the intake and shooter motors go on an Expansion Hub**. Names are case-sensitive and are
-the ones in the code.
+This branch only uses the four drive motors, the two dead wheels and the Control Hub IMU. One Control Hub is
+enough; no Expansion Hub is needed. Names are case-sensitive and are the original ones from the code.
 
 ## Control Hub
 
@@ -15,17 +13,16 @@ the ones in the code.
 | Motor | 3 | `rb` | Drive, back-right. **Strafe dead wheel plugs into this port's encoder connector** | FORWARD |
 | I2C bus 0 | built-in | `imu` | Control Hub IMU (heading for Pedro) | n/a |
 
-Nothing else needs to be configured for driving. The auxiliary systems (intake, shooter, adjustor; see **Auxiliary systems** below)
-are **switched off** (`AuxSettings.ENABLED = false`), so those devices need not be in the configuration. When they are switched
-back on, Competition TeleOp, Competition Auto and Shoot On Tags **fail at INIT if the devices are not in the active configuration**. The Limelight is only used by the vision OpModes (next section).
+Nothing else needs to be configured for driving. The code does not look up any other device, except the Limelight for
+the pollen vision OpModes (next section).
 
-## Limelight 3A (vision OpModes, and goal-tag aiming in Competition TeleOp / Auto)
+## Limelight 3A (only for Pollen Vision Test and Pollen Chase)
 
 | Type | Plugs into | Config name | Notes |
 | --- | --- | --- | --- |
 | Limelight 3A (appears as a USB / Ethernet device) | Control Hub blue **USB 3.0** port | `limelight` | Scan in Configure Robot, tap its name and rename it exactly `limelight`. |
 
-Full camera setup is in `LIMELIGHT_POLLEN.md` (pollen) and `LIMELIGHT_APRILTAG.md` (goal tag). Competition TeleOp and Auto use it for aiming but still run without it (aiming is off); the other OpModes do not need it.
+Full camera setup is in `LIMELIGHT_POLLEN.md`. The other OpModes do not need it.
 
 Directions are set in code, so don't reverse anything in the config. Configure each drive motor as whichever
 motor type you actually have.
@@ -36,7 +33,7 @@ motor type you actually have.
 2. Select the **Control Hub** (not the Expansion Hub).
 3. **Motors** tab: set port 0 to `lf`, port 1 to `lb`, port 2 to `rf`, port 3 to `rb`, each with your motor type.
 4. **I2C Bus 0**: make sure the built-in IMU is listed and named exactly `imu`. It is normally added for you.
-5. For the auxiliary systems add the **Expansion Hub** and the devices from the **Auxiliary systems** table below (`intake`, `shoot1`, `shoot2`, `adjustor`). Don't add anything else, unless you are running the vision OpModes.
+5. Don't add servos, digital or analog devices, or any Ethernet / USB device.
 6. **Save** with a name (for example `DriveOnly`), then **Activate** it.
 
 ## Dead wheels (goBILDA 4-bar pods)
@@ -59,30 +56,22 @@ motor type you actually have.
 5. `RobotHealthMonitor` reads velocity on every motor, so on `rf` and `rb` it reports the pod's velocity.
    Ignore stall warnings from those two.
 
-## Auxiliary systems (intake, shooter, shot-angle adjustor): CURRENTLY DISABLED
+## What is switched off in this branch
 
-**They are switched off:** `subsystems/AuxSettings.java` has `ENABLED = false`. While it is false the `Intake`, `Shooter` and `Adjustor` classes do not look up
-any hardware and every command does nothing, so the four devices below do not have to be in the configuration, and the OpModes that use them (the TeleOps,
-Competition Auto, Shoot On Tags, the three bench tests) still run (Shoot On Tags drives to the shooting position and does not shoot; the bench tests say DISABLED).
-**To bring them back:** set `ENABLED = true`, rebuild, and add the Expansion Hub and these devices to the configuration:
+`CompTeleOp` and `CompAuto` have the shooter, intake, lift, sorter and Limelight code commented out (marked
+`DISABLED`). The subsystem classes are untouched and just aren't created. The `Test ...` subsystem OpModes carry
+`@Disabled` so they are hidden from the Driver Hub menu. To bring a subsystem back, uncomment its lines and add its
+devices to the config from the table below.
 
-| Config name | Type | Subsystem | Notes |
-| --- | --- | --- | --- |
-| `intake` | motor | `Intake` | Run on power. `Intake.INTAKE_REVERSED` flips it if "in" spins the wrong way. |
-| `shoot1` | motor, **encoder plugged in** | `Shooter` | Run on velocity (the controller holds the speed). Set REVERSE in code. |
-| `shoot2` | motor, **encoder plugged in** | `Shooter` | Faces `shoot1`, so it is set FORWARD while `shoot1` is REVERSE: the wheels spin opposite ways and both are commanded a positive velocity. |
-| `adjustor` | servo | `Adjustor` | Shot angle. Positions 0 to 1, limited by `Adjustor.MIN_POSITION` / `MAX_POSITION`. |
+| Config name | Type | Subsystem |
+| --- | --- | --- |
+| `inOne`, `inTwo` | motors | Intake |
+| `spinOne`, `spinTwo` | motors (keep encoders plugged in) | Shooter |
+| `lift` | servo | Lift |
+| `sortOne`, `sortTwo` | servos | Sorter |
+| `limelight` | Limelight 3A (Ethernet Devices) | Limelight |
 
-Port numbers are your choice; suggested: `intake`, `shoot1`, `shoot2` on Expansion Hub motor ports 0, 1, 2, and `adjustor` on a
-servo port of either hub. Directions are set in code: don't reverse anything in the config. If a shooter wheel throws the wrong way, flip
-`Shooter.SHOOT_ONE_REVERSED` / `SHOOT_TWO_REVERSED`. The shooter speeds are in **ticks per second** (`Shooter.LOW_VELOCITY` 1100,
-`HIGH_VELOCITY` 1400, the values from last year), set with `setVelocity`, so what they mean in RPM depends on the motor and any gearing.
-
-Still switched off in `CompTeleOpBase` (the red and blue TeleOps) and `CompAuto` (their code is commented out and marked `DISABLED`): the **sorter**
-(`sortOne`, `sortTwo` servos) and the **Limelight** (`limelight`, Ethernet device). To bring one back, uncomment its lines and add its
-devices to the config.
-
-Seven motors (four drive, three auxiliary) need an Expansion Hub as well.
+Eight motors need an Expansion Hub as well.
 
 ## Check it works and tune
 

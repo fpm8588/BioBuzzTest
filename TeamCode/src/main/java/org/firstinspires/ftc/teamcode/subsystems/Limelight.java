@@ -8,9 +8,7 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
-import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.teamcode.util.PollenMath;
-import org.firstinspires.ftc.teamcode.util.TagMath;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -122,29 +120,6 @@ public class Limelight {
             blobs.add(new PollenMath.Blob(c.getTargetXDegrees(), c.getTargetYDegrees(), c.getTargetArea()));
         }
         return blobs;
-    }
-
-    /**
-     * Every AprilTag the AprilTag pipeline found in the latest frame (ID, tx and ty in degrees, area, and the tag's position in camera
-     * space in inches when the Limelight gives a pose), or an empty list if there is no valid result or it is older than
-     * maxStalenessMs. Call update() first, with the AprilTag pipeline selected.
-     */
-    public List<TagMath.Tag> getTags(long maxStalenessMs) {
-        List<TagMath.Tag> tags = new ArrayList<>();
-        if (latestResult == null || !latestResult.isValid() || getStalenessMs() > maxStalenessMs) return tags;
-        for (LLResultTypes.FiducialResult f : latestResult.getFiducialResults()) {
-            double x = Double.NaN, y = Double.NaN, z = Double.NaN;
-            Pose3D pose = f.getTargetPoseCameraSpace();
-            if (pose != null && pose.getPosition() != null) {
-                Position p = pose.getPosition();
-                x = p.unit.toInches(p.x);
-                y = p.unit.toInches(p.y);
-                z = p.unit.toInches(p.z);
-                if (x == 0 && y == 0 && z == 0) x = y = z = Double.NaN;   // an all-zero pose means "no pose", not "on the lens"
-            }
-            tags.add(new TagMath.Tag(f.getFiducialId(), f.getTargetXDegrees(), f.getTargetYDegrees(), f.getTargetArea(), x, y, z));
-        }
-        return tags;
     }
 
     /** Pulls the latest frame result from the Limelight. Call once per loop before reading targets. */

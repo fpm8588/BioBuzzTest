@@ -10,10 +10,10 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
-import org.firstinspires.ftc.teamcode.subsystems.AuxSettings;
-import org.firstinspires.ftc.teamcode.subsystems.GoalTracker;
-import org.firstinspires.ftc.teamcode.subsystems.Intake;
-import org.firstinspires.ftc.teamcode.subsystems.Shooter;
+// DISABLED (drive + dead wheels only):
+// import org.firstinspires.ftc.teamcode.subsystems.Intake;
+// import org.firstinspires.ftc.teamcode.subsystems.Limelight;
+// import org.firstinspires.ftc.teamcode.subsystems.Shooter;
 import org.firstinspires.ftc.teamcode.util.Drawing;
 import org.firstinspires.ftc.teamcode.util.RobotHealthMonitor;
 import org.firstinspires.ftc.teamcode.util.Stats;
@@ -25,7 +25,7 @@ import org.firstinspires.ftc.teamcode.util.Stats;
  * (the Pedro visualizer at https://visualizer.pedropathing.com helps).
  *
  * This is a test-build skeleton: it demonstrates driving to a pose, running the
- * shooter/intake for a timed scoring window (after turning to face the goal AprilTag), and parking.
+ * shooter/intake for a timed scoring window, reading the Limelight, and parking.
  * Replace the scoring logic and poses once this season's field/game is known.
  */
 @Autonomous(name = "Competition Auto", group = "Competition")
@@ -35,9 +35,10 @@ public class CompAuto extends LinearOpMode {
     private Timer pathTimer;
     private int pathState;
 
-    private Shooter shooter;
-    private Intake intake;
-    private GoalTracker goal;
+    // DISABLED (drive + dead wheels only):
+    // private Shooter shooter;
+    // private Intake intake;
+    // private Limelight limelight;
     private Stats stats;
     private RobotHealthMonitor health;
 
@@ -70,30 +71,17 @@ public class CompAuto extends LinearOpMode {
                 break;
             case 1:
                 if (!follower.isBusy()) {
-                    // Spin the shooter up while turning to face the goal tag (skipped if the tag is not in view),
-                    // then feed.
-                    shooter.spinAtHigh();
-                    follower.startTeleopDrive();
-                    setPathState(14);
+                    // DISABLED (drive + dead wheels only): scoring window. Original code:
+                    //   shooter.spinAtHigh(); intake.intakeIn(); setPathState(15);
+                    // Drive straight on to the park pose instead.
+                    follower.followPath(park, true);
+                    setPathState(2);
                 }
                 break;
-            case 14: {
-                boolean seen = goal.hasGoal();
-                double t = pathTimer.getElapsedTimeSeconds();
-                follower.setTeleOpDrive(0, 0, seen ? goal.getAimTurn() : 0, true);
-                boolean done = seen ? (goal.isAimed() || t > AprilTagSettings.AUTO_AIM_TIMEOUT_SEC)
-                        : t > AprilTagSettings.AUTO_NO_TAG_SKIP_SEC;
-                if (done) {
-                    follower.setTeleOpDrive(0, 0, 0, true);
-                    intake.intakeIn();
-                    setPathState(15);
-                }
-                break;
-            }
             case 15:
-                if (pathTimer.getElapsedTimeSeconds() > (AuxSettings.ENABLED ? SCORE_DURATION_SEC : 0)) {
-                    shooter.stop();
-                    intake.stop();
+                if (pathTimer.getElapsedTimeSeconds() > SCORE_DURATION_SEC) {
+                    // shooter.stop(); // DISABLED (drive + dead wheels only)
+                    // intake.stop();
                     stats.recordShot(true);
                     follower.followPath(park, true);
                     setPathState(2);
@@ -116,9 +104,10 @@ public class CompAuto extends LinearOpMode {
     public void runOpMode() {
         pathTimer = new Timer();
         follower = Constants.createFollower(hardwareMap);
-        shooter = new Shooter(hardwareMap);
-        intake = new Intake(hardwareMap);
-        goal = GoalTracker.create(hardwareMap); // works without a Limelight in the configuration: the aim step is skipped
+        // DISABLED (drive + dead wheels only):
+        // shooter = new Shooter(hardwareMap);
+        // intake = new Intake(hardwareMap);
+        // limelight = new Limelight(hardwareMap);
         stats = new Stats(telemetry);
         health = new RobotHealthMonitor(hardwareMap, telemetry, "CompAuto");
         Drawing.init();
@@ -133,7 +122,7 @@ public class CompAuto extends LinearOpMode {
 
         while (opModeIsActive()) {
             follower.update();
-            goal.update();
+            // limelight.update(); // DISABLED (drive + dead wheels only)
             autonomousPathUpdate();
             stats.trackPose(follower.getPose());
             health.update();
@@ -143,14 +132,14 @@ public class CompAuto extends LinearOpMode {
             telemetry.addData("x", follower.getPose().getX());
             telemetry.addData("y", follower.getPose().getY());
             telemetry.addData("heading", follower.getPose().getHeading());
-            telemetry.addData("goal tag", goal.status());
+            // telemetry.addData("limelight target", limelight.hasTarget()); // DISABLED
             telemetry.update();
             stats.update();
         }
 
-        shooter.stop();
-        intake.stop();
-        goal.stop();
+        // shooter.stop(); // DISABLED (drive + dead wheels only)
+        // intake.stop();
+        // limelight.stop();
         stats.writeSummaryToFile("CompAuto");
     }
 }
