@@ -11,11 +11,14 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 public class CompTeleOpControls {
 
     // ===== DRIVE =====
-    // forward is negative on the stick
-    public static double driveForward(Gamepad driver, Gamepad operator) { return -driver.left_stick_y; }
-    // Pedro's strafe is positive to the LEFT, but the stick is positive to the RIGHT, so flip it
-    public static double driveStrafe(Gamepad driver, Gamepad operator) { return -driver.left_stick_x; }
-    public static double driveTurn(Gamepad driver, Gamepad operator) { return driver.right_stick_x; }
+    // On this robot pushing forward / right moved it back / left, so both are reversed from the usual mapping
+    // (usual: forward = -left_stick_y, strafe = -left_stick_x). Turning was right, so its direction is unchanged.
+    public static double driveForward(Gamepad driver, Gamepad operator) { return driver.left_stick_y; }
+    public static double driveStrafe(Gamepad driver, Gamepad operator) { return driver.left_stick_x; }
+
+    /** How much of the stick the turn uses: 1.0 = full (it was 1.0), lower = gentler. Slow mode still multiplies this by 0.4. */
+    public static double TURN_SENSITIVITY = 0.8;
+    public static double driveTurn(Gamepad driver, Gamepad operator) { return driver.right_stick_x * TURN_SENSITIVITY; }
 
     // ===== SLOW MODE =====
     public static boolean slowMode(Gamepad driver, Gamepad operator) { return driver.left_trigger > 0.5; }
