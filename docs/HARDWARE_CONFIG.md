@@ -7,10 +7,10 @@ enough; no Expansion Hub is needed. Names are case-sensitive and are the origina
 
 | Type | Port | Config name | Device | Direction set in code |
 | --- | --- | --- | --- | --- |
-| Motor | 0 | `lf` | Drive, front-left | REVERSE |
-| Motor | 1 | `lb` | Drive, back-left | REVERSE |
-| Motor | 2 | `rf` | Drive, front-right. **Forward dead wheel plugs into this port's encoder connector** | FORWARD |
-| Motor | 3 | `rb` | Drive, back-right. **Strafe dead wheel plugs into this port's encoder connector** | FORWARD |
+| Motor | 0 | `lf` | Drive, front-left | FORWARD |
+| Motor | 1 | `lb` | Drive, back-left | FORWARD |
+| Motor | 2 | `rf` | Drive, front-right. **Forward dead wheel plugs into this port's encoder connector** | REVERSE |
+| Motor | 3 | `rb` | Drive, back-right. **Strafe dead wheel plugs into this port's encoder connector** | REVERSE |
 | I2C bus 0 | built-in | `imu` | Control Hub IMU (heading for Pedro) | n/a |
 
 Nothing else needs to be configured for driving. The code does not look up any other device, except the Limelight for
@@ -24,7 +24,7 @@ the pollen vision OpModes (next section).
 
 Full camera setup is in `LIMELIGHT_POLLEN.md`. The other OpModes do not need it.
 
-Directions are set in code, so don't reverse anything in the config. Configure each drive motor as whichever
+Directions are set in code (all four are the opposite of Pedro's defaults on this robot: `lf` and `lb` FORWARD, `rf` and `rb` REVERSE), so don't reverse anything in the config. Configure each drive motor as whichever
 motor type you actually have.
 
 ## Step by step in the Driver Hub

@@ -11,14 +11,15 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 public class CompTeleOpControls {
 
     // ===== DRIVE =====
-    // On this robot pushing forward / right moved it back / left, so both are reversed from the usual mapping
-    // (usual: forward = -left_stick_y, strafe = -left_stick_x). Turning was right, so its direction is unchanged.
-    public static double driveForward(Gamepad driver, Gamepad operator) { return driver.left_stick_y; }
-    public static double driveStrafe(Gamepad driver, Gamepad operator) { return driver.left_stick_x; }
+    // Pedro's own teleop mapping: forward is negative on the stick; Pedro's strafe is positive to the LEFT but the stick is positive to
+    // the RIGHT; and a positive turn is counter-clockwise (left) but the stick is positive to the right. So all three are negated.
+    // (The motor directions in Constants.java are set so that the robot then drives the way the stick points.)
+    public static double driveForward(Gamepad driver, Gamepad operator) { return -driver.left_stick_y; }
+    public static double driveStrafe(Gamepad driver, Gamepad operator) { return -driver.left_stick_x; }
 
-    /** How much of the stick the turn uses: 1.0 = full (it was 1.0), lower = gentler. Slow mode still multiplies this by 0.4. */
+    /** How much of the stick the turn uses: 1.0 = full, lower = gentler (it is 0.8; it was 1.0). Slow mode still multiplies this by 0.4. */
     public static double TURN_SENSITIVITY = 0.8;
-    public static double driveTurn(Gamepad driver, Gamepad operator) { return driver.right_stick_x * TURN_SENSITIVITY; }
+    public static double driveTurn(Gamepad driver, Gamepad operator) { return -driver.right_stick_x * TURN_SENSITIVITY; }
 
     // ===== SLOW MODE =====
     public static boolean slowMode(Gamepad driver, Gamepad operator) { return driver.left_trigger > 0.5; }

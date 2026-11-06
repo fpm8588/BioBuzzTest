@@ -43,10 +43,13 @@ public class Constants {
             .leftRearMotorName("lb")
             .rightFrontMotorName("rf")
             .rightRearMotorName("rb")
-            .leftFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
-            .leftRearMotorDirection(DcMotorSimple.Direction.REVERSE)
-            .rightFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
-            .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
+            // All four are the OPPOSITE of Pedro's defaults (left REVERSE, right FORWARD) because on this robot every movement
+            // (forward, strafe and the follower's turning) came out as its inverse. The dead wheels are not affected: Pedro's
+            // Encoder multiplies each pod's reading by its motor's direction, which cancels the direction setting.
+            .leftFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
+            .leftRearMotorDirection(DcMotorSimple.Direction.FORWARD)
+            .rightFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
+            .rightRearMotorDirection(DcMotorSimple.Direction.REVERSE)
             .xVelocity(64.3434)  // Forward Velocity tuner (one run; average a few more)
             .yVelocity(58.0994); // Lateral Velocity tuner (one run; average a few more)
 
