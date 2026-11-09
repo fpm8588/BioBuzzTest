@@ -7,10 +7,11 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+import org.firstinspires.ftc.teamcode.subsystems.Adjustor;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
-import org.firstinspires.ftc.teamcode.subsystems.Lift;
 import org.firstinspires.ftc.teamcode.subsystems.Shooter;
-import org.firstinspires.ftc.teamcode.subsystems.Sorter;
+// DISABLED (sorter hardware not set up yet): re-enable with the sorter code below.
+// import org.firstinspires.ftc.teamcode.subsystems.Sorter;
 import org.firstinspires.ftc.teamcode.util.Drawing;
 import org.firstinspires.ftc.teamcode.util.RobotHealthMonitor;
 import org.firstinspires.ftc.teamcode.util.Stats;
@@ -24,14 +25,15 @@ public class CompTeleOp extends OpMode {
 
     private Shooter shooter;
     private Intake intake;
-    private Lift lift;
-    private Sorter sorter;
+    private Adjustor adjustor;
+    // DISABLED (sorter hardware not set up yet):
+    // private Sorter sorter;
     private Follower follower;
-    private boolean liftUpPrev;
-    private boolean liftMidPrev;
-    private boolean liftDownPrev;
-    private boolean sortLeftPrev;
-    private boolean sortRightPrev;
+    private boolean adjustorHighPrev;
+    private boolean adjustorMidPrev;
+    private boolean adjustorLowPrev;
+    // private boolean sortLeftPrev;
+    // private boolean sortRightPrev;
     private boolean slowActive;
     private boolean intakeInPrev;
     private Stats stats;
@@ -41,8 +43,8 @@ public class CompTeleOp extends OpMode {
     public void init() {
         shooter = new Shooter(hardwareMap);
         intake = new Intake(hardwareMap);
-        lift = new Lift(hardwareMap);
-        sorter = new Sorter(hardwareMap);
+        adjustor = new Adjustor(hardwareMap);
+        // sorter = new Sorter(hardwareMap); // DISABLED (sorter hardware not set up yet)
         follower = Constants.createFollower(hardwareMap);
         follower.update();
         stats = new Stats(telemetry);
@@ -83,26 +85,27 @@ public class CompTeleOp extends OpMode {
         else { intake.stop(); }
         if (intakeInNow && !intakeInPrev) { stats.recordIntakeCycle(); }
         intakeInPrev = intakeInNow;
-        // Lift to top position
-        boolean liftUpNow = CompTeleOpControls.liftUp(driver, operator);
-        if (liftUpNow && !liftUpPrev) { lift.goUp(); }
-        liftUpPrev = liftUpNow;
-        // Lift to middle position
-        boolean liftMidNow = CompTeleOpControls.liftMid(driver, operator);
-        if (liftMidNow && !liftMidPrev) { lift.goMid(); }
-        liftMidPrev = liftMidNow;
-        // Lift to bottom position
-        boolean liftDownNow = CompTeleOpControls.liftDown(driver, operator);
-        if (liftDownNow && !liftDownPrev) { lift.goDown(); }
-        liftDownPrev = liftDownNow;
-        // Route to left gate
-        boolean sortLeftNow = CompTeleOpControls.sortLeft(driver, operator);
-        if (sortLeftNow && !sortLeftPrev) { sorter.sortLeft(); }
-        sortLeftPrev = sortLeftNow;
-        // Route to right gate
-        boolean sortRightNow = CompTeleOpControls.sortRight(driver, operator);
-        if (sortRightNow && !sortRightPrev) { sorter.sortRight(); }
-        sortRightPrev = sortRightNow;
+        // Shot-angle adjustor to its high position
+        boolean adjustorHighNow = CompTeleOpControls.adjustorHigh(driver, operator);
+        if (adjustorHighNow && !adjustorHighPrev) { adjustor.goHigh(); }
+        adjustorHighPrev = adjustorHighNow;
+        // Shot-angle adjustor to its middle position
+        boolean adjustorMidNow = CompTeleOpControls.adjustorMid(driver, operator);
+        if (adjustorMidNow && !adjustorMidPrev) { adjustor.goMid(); }
+        adjustorMidPrev = adjustorMidNow;
+        // Shot-angle adjustor to its low position
+        boolean adjustorLowNow = CompTeleOpControls.adjustorLow(driver, operator);
+        if (adjustorLowNow && !adjustorLowPrev) { adjustor.goLow(); }
+        adjustorLowPrev = adjustorLowNow;
+        // DISABLED (sorter hardware not set up yet):
+        // // Route to left gate
+        // boolean sortLeftNow = CompTeleOpControls.sortLeft(driver, operator);
+        // if (sortLeftNow && !sortLeftPrev) { sorter.sortLeft(); }
+        // sortLeftPrev = sortLeftNow;
+        // // Route to right gate
+        // boolean sortRightNow = CompTeleOpControls.sortRight(driver, operator);
+        // if (sortRightNow && !sortRightPrev) { sorter.sortRight(); }
+        // sortRightPrev = sortRightNow;
 
         // --- Automations ---
         if (CompTeleOpControls.resetHeading(driver, operator)) resetHeading();
@@ -116,6 +119,8 @@ public class CompTeleOp extends OpMode {
         health.update(driver);
         Drawing.drawRobot(follower.getPose());
 
+        telemetry.addData("shooter velocity (ticks/sec)", "%.0f", shooter.getVelocity());
+        telemetry.addData("adjustor", adjustor.getPosition());
         telemetry.addData("pose", follower.getPose());
         telemetry.update();
     }
@@ -128,7 +133,7 @@ public class CompTeleOp extends OpMode {
     }
 
     /**
-     * Zero the robot's heading in the Pedro follower to the driver's current facing, for when the IMU/Pinpoint heading drifts mid-match.
+     * Zero the robot's heading in the Pedro follower to the driver's current facing, for when the IMU heading drifts mid-match.
      */
     private void resetHeading() {
         Pose current = follower.getPose();

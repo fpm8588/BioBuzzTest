@@ -11,8 +11,9 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
-import org.firstinspires.ftc.teamcode.subsystems.Limelight;
 import org.firstinspires.ftc.teamcode.subsystems.Shooter;
+// DISABLED (Limelight not part of this auto yet):
+// import org.firstinspires.ftc.teamcode.subsystems.Limelight;
 import org.firstinspires.ftc.teamcode.util.Drawing;
 import org.firstinspires.ftc.teamcode.util.RobotHealthMonitor;
 import org.firstinspires.ftc.teamcode.util.Stats;
@@ -36,7 +37,7 @@ public class CompAuto extends LinearOpMode {
 
     private Shooter shooter;
     private Intake intake;
-    private Limelight limelight;
+    // private Limelight limelight; // DISABLED (Limelight not part of this auto yet)
     private Stats stats;
     private RobotHealthMonitor health;
 
@@ -69,12 +70,9 @@ public class CompAuto extends LinearOpMode {
                 break;
             case 1:
                 if (!follower.isBusy()) {
-                    // Arrived at scorePose: spin up the shooter and feed via intake
-                    // for a fixed window. Replace with a real "shot fired" signal
-                    // (sensor or vision confirmation) once one exists.
                     shooter.spinAtHigh();
                     intake.intakeIn();
-                    setPathState(15); // scoring hold state
+                    setPathState(15);
                 }
                 break;
             case 15:
@@ -105,7 +103,7 @@ public class CompAuto extends LinearOpMode {
         follower = Constants.createFollower(hardwareMap);
         shooter = new Shooter(hardwareMap);
         intake = new Intake(hardwareMap);
-        limelight = new Limelight(hardwareMap);
+        // limelight = new Limelight(hardwareMap); // DISABLED (Limelight not part of this auto yet)
         stats = new Stats(telemetry);
         health = new RobotHealthMonitor(hardwareMap, telemetry, "CompAuto");
         Drawing.init();
@@ -120,7 +118,7 @@ public class CompAuto extends LinearOpMode {
 
         while (opModeIsActive()) {
             follower.update();
-            limelight.update();
+            // limelight.update(); // DISABLED (Limelight not part of this auto yet)
             autonomousPathUpdate();
             stats.trackPose(follower.getPose());
             health.update();
@@ -130,14 +128,14 @@ public class CompAuto extends LinearOpMode {
             telemetry.addData("x", follower.getPose().getX());
             telemetry.addData("y", follower.getPose().getY());
             telemetry.addData("heading", follower.getPose().getHeading());
-            telemetry.addData("limelight target", limelight.hasTarget());
+            // telemetry.addData("limelight target", limelight.hasTarget()); // DISABLED (Limelight not part of this auto yet)
             telemetry.update();
             stats.update();
         }
 
         shooter.stop();
         intake.stop();
-        limelight.stop();
+        // limelight.stop();
         stats.writeSummaryToFile("CompAuto");
     }
 }

@@ -35,7 +35,8 @@ public class TestShooter extends OpMode {
             shooter.stop();
         }
 
-        telemetry.addData("subsystem", "Shooter");
+        telemetry.addData("subsystem", "Shooter (shoot1 + shoot2)");
+        telemetry.addData("velocity (ticks/sec)", "%.0f", shooter.getVelocity());
         telemetry.update();
     }
 }
