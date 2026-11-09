@@ -180,13 +180,6 @@ public class LeaveAndPark extends LinearOpMode {
     /** Stop if the robot is more than this far from the line it is following, inches. */
     public static double MAX_OFF_LINE_IN = 6.0;
 
-    /**
-     * How far past a wall line the robot's footprint may be before the checks call it "outside the field walls" (before the run for the
-     * route, and live from the odometry pose), inches. The start has the robot's back edge ON the wall, so it was 0.5 in, which
-     * stopped the robot at the first nudge or bit of odometry noise. The wall is a hard stop, so a real overrun is small.
-     */
-    public static double WALL_TOLERANCE_IN = 2.0;
-
     static LeaveParkPlan buildPlan() { // package-private: PollenChase reuses the same field guard
         LeaveParkPlan.Config c = new LeaveParkPlan.Config();
         c.zoneXMin = ZONE_X_MIN;
@@ -206,7 +199,6 @@ public class LeaveAndPark extends LinearOpMode {
                 {FLOWER_1_X, FLOWER_1_Y}, {FLOWER_2_X, FLOWER_2_Y}, {FLOWER_3_X, FLOWER_3_Y}, {FLOWER_4_X, FLOWER_4_Y}};
         c.flowerHalfIn = FLOWER_HALF_IN;
         c.flowerMarginIn = FLOWER_MARGIN_IN;
-        c.wallToleranceIn = WALL_TOLERANCE_IN;
         return LeaveParkPlan.plan(c);
     }
 

@@ -7,10 +7,10 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
-// DISABLED (drive + dead wheels only): re-enable these with the subsystem code below.
-// import org.firstinspires.ftc.teamcode.subsystems.Intake;
-// import org.firstinspires.ftc.teamcode.subsystems.Lift;
-// import org.firstinspires.ftc.teamcode.subsystems.Shooter;
+import org.firstinspires.ftc.teamcode.subsystems.Adjustor;
+import org.firstinspires.ftc.teamcode.subsystems.Intake;
+import org.firstinspires.ftc.teamcode.subsystems.Shooter;
+// DISABLED (sorter hardware not set up yet): re-enable with the sorter code below.
 // import org.firstinspires.ftc.teamcode.subsystems.Sorter;
 import org.firstinspires.ftc.teamcode.util.Drawing;
 import org.firstinspires.ftc.teamcode.util.RobotHealthMonitor;
@@ -23,29 +23,28 @@ import org.firstinspires.ftc.teamcode.util.Stats;
 @TeleOp(name = "Competition TeleOp", group = "Competition")
 public class CompTeleOp extends OpMode {
 
-    // DISABLED (drive + dead wheels only):
-    // private Shooter shooter;
-    // private Intake intake;
-    // private Lift lift;
+    private Shooter shooter;
+    private Intake intake;
+    private Adjustor adjustor;
+    // DISABLED (sorter hardware not set up yet):
     // private Sorter sorter;
     private Follower follower;
-    // private boolean liftUpPrev;
-    // private boolean liftMidPrev;
-    // private boolean liftDownPrev;
+    private boolean adjustorHighPrev;
+    private boolean adjustorMidPrev;
+    private boolean adjustorLowPrev;
     // private boolean sortLeftPrev;
     // private boolean sortRightPrev;
     private boolean slowActive;
-    // private boolean intakeInPrev;
+    private boolean intakeInPrev;
     private Stats stats;
     private RobotHealthMonitor health;
 
     @Override
     public void init() {
-        // DISABLED (drive + dead wheels only):
-        // shooter = new Shooter(hardwareMap);
-        // intake = new Intake(hardwareMap);
-        // lift = new Lift(hardwareMap);
-        // sorter = new Sorter(hardwareMap);
+        shooter = new Shooter(hardwareMap);
+        intake = new Intake(hardwareMap);
+        adjustor = new Adjustor(hardwareMap);
+        // sorter = new Sorter(hardwareMap); // DISABLED (sorter hardware not set up yet)
         follower = Constants.createFollower(hardwareMap);
         follower.update();
         stats = new Stats(telemetry);
@@ -74,30 +73,31 @@ public class CompTeleOp extends OpMode {
         follower.setTeleOpDrive(axial, lateral, yaw, false); // last arg: true = robot-centric
         follower.update();
 
-        // --- Actions --- (DISABLED: drive + dead wheels only)
-        // // group: shooter
-        // if (CompTeleOpControls.shooterHigh(driver, operator)) { shooter.spinAtHigh(); } // Shooter high-velocity preset: shooterHigh
-        // else if (CompTeleOpControls.shooterLow(driver, operator)) { shooter.spinAtLow(); } // Shooter low-velocity preset: shooterLow
-        // else { shooter.stop(); }
-        // // group: intake
-        // boolean intakeInNow = CompTeleOpControls.intakeIn(driver, operator);
-        // if (intakeInNow) { intake.intakeIn(); } // Intake in: intakeIn
-        // else if (CompTeleOpControls.intakeOut(driver, operator)) { intake.intakeOut(); } // Intake out / reject: intakeOut
-        // else { intake.stop(); }
-        // if (intakeInNow && !intakeInPrev) { stats.recordIntakeCycle(); }
-        // intakeInPrev = intakeInNow;
-        // // Lift to top position
-        // boolean liftUpNow = CompTeleOpControls.liftUp(driver, operator);
-        // if (liftUpNow && !liftUpPrev) { lift.goUp(); }
-        // liftUpPrev = liftUpNow;
-        // // Lift to middle position
-        // boolean liftMidNow = CompTeleOpControls.liftMid(driver, operator);
-        // if (liftMidNow && !liftMidPrev) { lift.goMid(); }
-        // liftMidPrev = liftMidNow;
-        // // Lift to bottom position
-        // boolean liftDownNow = CompTeleOpControls.liftDown(driver, operator);
-        // if (liftDownNow && !liftDownPrev) { lift.goDown(); }
-        // liftDownPrev = liftDownNow;
+        // --- Actions ---
+        // group: shooter
+        if (CompTeleOpControls.shooterHigh(driver, operator)) { shooter.spinAtHigh(); } // Shooter high-velocity preset: shooterHigh
+        else if (CompTeleOpControls.shooterLow(driver, operator)) { shooter.spinAtLow(); } // Shooter low-velocity preset: shooterLow
+        else { shooter.stop(); }
+        // group: intake
+        boolean intakeInNow = CompTeleOpControls.intakeIn(driver, operator);
+        if (intakeInNow) { intake.intakeIn(); } // Intake in: intakeIn
+        else if (CompTeleOpControls.intakeOut(driver, operator)) { intake.intakeOut(); } // Intake out / reject: intakeOut
+        else { intake.stop(); }
+        if (intakeInNow && !intakeInPrev) { stats.recordIntakeCycle(); }
+        intakeInPrev = intakeInNow;
+        // Shot-angle adjustor to its high position
+        boolean adjustorHighNow = CompTeleOpControls.adjustorHigh(driver, operator);
+        if (adjustorHighNow && !adjustorHighPrev) { adjustor.goHigh(); }
+        adjustorHighPrev = adjustorHighNow;
+        // Shot-angle adjustor to its middle position
+        boolean adjustorMidNow = CompTeleOpControls.adjustorMid(driver, operator);
+        if (adjustorMidNow && !adjustorMidPrev) { adjustor.goMid(); }
+        adjustorMidPrev = adjustorMidNow;
+        // Shot-angle adjustor to its low position
+        boolean adjustorLowNow = CompTeleOpControls.adjustorLow(driver, operator);
+        if (adjustorLowNow && !adjustorLowPrev) { adjustor.goLow(); }
+        adjustorLowPrev = adjustorLowNow;
+        // DISABLED (sorter hardware not set up yet):
         // // Route to left gate
         // boolean sortLeftNow = CompTeleOpControls.sortLeft(driver, operator);
         // if (sortLeftNow && !sortLeftPrev) { sorter.sortLeft(); }
@@ -119,14 +119,16 @@ public class CompTeleOp extends OpMode {
         health.update(driver);
         Drawing.drawRobot(follower.getPose());
 
+        telemetry.addData("shooter velocity (ticks/sec)", "%.0f", shooter.getVelocity());
+        telemetry.addData("adjustor", adjustor.getPosition());
         telemetry.addData("pose", follower.getPose());
         telemetry.update();
     }
 
     @Override
     public void stop() {
-        // shooter.stop(); // DISABLED (drive + dead wheels only)
-        // intake.stop();
+        shooter.stop();
+        intake.stop();
         stats.writeSummaryToFile("CompTeleOp");
     }
 
