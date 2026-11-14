@@ -7,9 +7,8 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
-import org.firstinspires.ftc.teamcode.subsystems.Adjustor;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
-import org.firstinspires.ftc.teamcode.subsystems.Shooter;
+import org.firstinspires.ftc.teamcode.subsystems.Shoot;
 // DISABLED (sorter hardware not set up yet): re-enable with the sorter code below.
 // import org.firstinspires.ftc.teamcode.subsystems.Sorter;
 import org.firstinspires.ftc.teamcode.util.Drawing;
@@ -23,15 +22,11 @@ import org.firstinspires.ftc.teamcode.util.Stats;
 @TeleOp(name = "Competition TeleOp", group = "Competition")
 public class CompTeleOp extends OpMode {
 
-    private Shooter shooter;
+    private Shoot shoot;
     private Intake intake;
-    private Adjustor adjustor;
     // DISABLED (sorter hardware not set up yet):
     // private Sorter sorter;
     private Follower follower;
-    private boolean adjustorHighPrev;
-    private boolean adjustorMidPrev;
-    private boolean adjustorLowPrev;
     // private boolean sortLeftPrev;
     // private boolean sortRightPrev;
     private boolean slowActive;
@@ -41,9 +36,8 @@ public class CompTeleOp extends OpMode {
 
     @Override
     public void init() {
-        shooter = new Shooter(hardwareMap);
+        shoot = new Shoot(hardwareMap);
         intake = new Intake(hardwareMap);
-        adjustor = new Adjustor(hardwareMap);
         // sorter = new Sorter(hardwareMap); // DISABLED (sorter hardware not set up yet)
         follower = Constants.createFollower(hardwareMap);
         follower.update();
@@ -74,29 +68,16 @@ public class CompTeleOp extends OpMode {
         follower.update();
 
         // --- Actions ---
-        // group: shooter
-        if (CompTeleOpControls.shooterHigh(driver, operator)) { shooter.spinAtHigh(); } // Shooter high-velocity preset: shooterHigh
-        else if (CompTeleOpControls.shooterLow(driver, operator)) { shooter.spinAtLow(); } // Shooter low-velocity preset: shooterLow
-        else { shooter.stop(); }
-        // group: intake
+        // Shoot: held at Shoot.SHOOT_RPM (3000) while the button is held
+        if (CompTeleOpControls.shoot(driver, operator)) { shoot.spin(); } // Shoot: shoot
+        else { shoot.stop(); }
+        // Intake: held at Intake.INTAKE_RPM (1000), in or out
         boolean intakeInNow = CompTeleOpControls.intakeIn(driver, operator);
         if (intakeInNow) { intake.intakeIn(); } // Intake in: intakeIn
         else if (CompTeleOpControls.intakeOut(driver, operator)) { intake.intakeOut(); } // Intake out / reject: intakeOut
         else { intake.stop(); }
         if (intakeInNow && !intakeInPrev) { stats.recordIntakeCycle(); }
         intakeInPrev = intakeInNow;
-        // Shot-angle adjustor to its high position
-        boolean adjustorHighNow = CompTeleOpControls.adjustorHigh(driver, operator);
-        if (adjustorHighNow && !adjustorHighPrev) { adjustor.goHigh(); }
-        adjustorHighPrev = adjustorHighNow;
-        // Shot-angle adjustor to its middle position
-        boolean adjustorMidNow = CompTeleOpControls.adjustorMid(driver, operator);
-        if (adjustorMidNow && !adjustorMidPrev) { adjustor.goMid(); }
-        adjustorMidPrev = adjustorMidNow;
-        // Shot-angle adjustor to its low position
-        boolean adjustorLowNow = CompTeleOpControls.adjustorLow(driver, operator);
-        if (adjustorLowNow && !adjustorLowPrev) { adjustor.goLow(); }
-        adjustorLowPrev = adjustorLowNow;
         // DISABLED (sorter hardware not set up yet):
         // // Route to left gate
         // boolean sortLeftNow = CompTeleOpControls.sortLeft(driver, operator);
@@ -119,15 +100,18 @@ public class CompTeleOp extends OpMode {
         health.update(driver);
         Drawing.drawRobot(follower.getPose());
 
-        telemetry.addData("shooter velocity (ticks/sec)", "%.0f", shooter.getVelocity());
-        telemetry.addData("adjustor", adjustor.getPosition());
+        String shootProblem = shoot.problem(), intakeProblem = intake.problem();
+        if (shootProblem != null) telemetry.addData("SHOOT PROBLEM", shootProblem);
+        if (intakeProblem != null) telemetry.addData("INTAKE PROBLEM", intakeProblem);
+        telemetry.addData("shoot RPM", "%.0f (target %.0f)%s", shoot.getRpm(), Shoot.SHOOT_RPM, shoot.isAtSpeed() ? "  READY" : "");
+        telemetry.addData("intake RPM", "%.0f (target %.0f)", intake.getRpm(), Intake.INTAKE_RPM);
         telemetry.addData("pose", follower.getPose());
         telemetry.update();
     }
 
     @Override
     public void stop() {
-        shooter.stop();
+        shoot.stop();
         intake.stop();
         stats.writeSummaryToFile("CompTeleOp");
     }

@@ -25,20 +25,12 @@ public class CompTeleOpControls {
     public static boolean slowMode(Gamepad driver, Gamepad operator) { return driver.left_trigger > 0.5; }
 
     // ===== ACTIONS =====
-    // Shooter high-velocity preset
-    public static boolean shooterHigh(Gamepad driver, Gamepad operator) { return operator.right_trigger > 0.1; }
-    // Shooter low-velocity preset
-    public static boolean shooterLow(Gamepad driver, Gamepad operator) { return operator.left_trigger > 0.1; }
-    // Intake in
+    // Shoot: hold to spin the flywheel at 3000 RPM, release to stop
+    public static boolean shoot(Gamepad driver, Gamepad operator) { return operator.right_trigger > 0.1; }
+    // Intake in (1000 RPM): hold
     public static boolean intakeIn(Gamepad driver, Gamepad operator) { return operator.dpad_up; }
-    // Intake out / reject
+    // Intake out / reject (1000 RPM the other way): hold
     public static boolean intakeOut(Gamepad driver, Gamepad operator) { return operator.dpad_left; }
-    // Shot-angle adjustor to its high position
-    public static boolean adjustorHigh(Gamepad driver, Gamepad operator) { return operator.x; }
-    // Shot-angle adjustor to its middle position
-    public static boolean adjustorMid(Gamepad driver, Gamepad operator) { return operator.a; }
-    // Shot-angle adjustor to its low position
-    public static boolean adjustorLow(Gamepad driver, Gamepad operator) { return operator.b; }
     // Route to left gate
     public static boolean sortLeft(Gamepad driver, Gamepad operator) { return operator.left_bumper; }
     // Route to right gate

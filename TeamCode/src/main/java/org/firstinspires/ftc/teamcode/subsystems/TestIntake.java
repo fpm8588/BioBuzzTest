@@ -1,16 +1,14 @@
-// @ftc-toolchain generated: bench-test — scaffolded; team edits expected
 package org.firstinspires.ftc.teamcode.subsystems;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 /*
- * Bench test for the Intake subsystem. Binds each action to a
- * gamepad1 button so you can exercise the subsystem in isolation on the robot.
- *
-     *   a -> intakeIn()
-     *   b -> intakeOut()
- *   back (always) -> stop()
+ * Bench test for the Intake subsystem (gamepad1):
+ *   a -> intakeIn() at Intake.INTAKE_RPM
+ *   b -> intakeOut()
+ *   back -> stop()
+ * Shows the measured RPM, so you can check it reaches 1000 (change Intake.INTAKE_RPM in Panels to test other speeds).
  */
 @TeleOp(name = "Test Intake", group = "subsystems")
 public class TestIntake extends OpMode {
@@ -24,21 +22,19 @@ public class TestIntake extends OpMode {
 
     @Override
     public void loop() {
-        if (gamepad1.aWasPressed()) {
-            intake.intakeIn();
-        }
-        if (gamepad1.bWasPressed()) {
-            intake.intakeOut();
-        }
+        if (gamepad1.aWasPressed()) intake.intakeIn();
+        if (gamepad1.bWasPressed()) intake.intakeOut();
+        if (gamepad1.backWasPressed()) intake.stop();
 
-        if (gamepad1.backWasPressed()) {
-            intake.stop();
-        }
-
-        if (!intake.isEnabled()) {
-            telemetry.addLine("DISABLED: AuxSettings.ENABLED is false, so this does nothing and needs no hardware.");
-        }
-        telemetry.addData("subsystem", "Intake");
+        String problem = intake.problem();
+        if (problem != null) telemetry.addData("PROBLEM", problem);
+        telemetry.addData("target RPM", "%.0f", Intake.INTAKE_RPM);
+        telemetry.addData("measured RPM", "%.0f", intake.getRpm());
         telemetry.update();
+    }
+
+    @Override
+    public void stop() {
+        intake.stop();
     }
 }

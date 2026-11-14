@@ -5,10 +5,9 @@ Read these before writing OpModes so you know each subsystem's hardware, config 
 
 | Subsystem | Summary |
 | --- | --- |
-| [Intake](subsystems\Intake.md) | Single-motor intake (`intake`) |
-| [Adjustor](subsystems\Adjustor.md) | Shot-angle adjustor servo (replaces the old Lift) |
+| [Intake](subsystems\Intake.md) | Single-motor intake (`intake`) held at 1000 RPM |
 | [Limelight](subsystems\Limelight.md) | <!-- @ftc-toolchain generated: subsystem-doc — scaffolded; team edits expected --> |
-| [Shooter](subsystems\Shooter.md) | Two opposed flywheels (`shoot1`, `shoot2`) run on velocity |
+| [Shoot](subsystems\Shoot.md) | Single flywheel motor (`shoot`) held at 3000 RPM |
 | [Sorter](subsystems\Sorter.md) | <!-- @ftc-toolchain generated: subsystem-doc — scaffolded; team edits expected --> |
 | [RobotHealthMonitor](subsystems\RobotHealthMonitor.md) | Live power/health dashboard + field position, hosted via Panels |
 

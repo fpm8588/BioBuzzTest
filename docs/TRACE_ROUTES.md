@@ -1,7 +1,7 @@
 # TRACE 1, 2, 3: plain drive routes
 
 Each Trace is one Driver Hub autonomous (group "Competition", names "Trace 1", "Trace 2", "Trace 3"). It drives the route from its Pedro
-Pathing export, like Leave and Park: **no Limelight, no avoidance, no intake or shooter** (`AuxSettings.ENABLED` stays `false`).
+Pathing export, like Leave and Park: **no Limelight, no avoidance, no intake or shoot** (they never touch those subsystems).
 The shared code is `RouteAutoBase`; a Trace class only lists its legs.
 
 ## What a Trace does

@@ -1,31 +1,36 @@
-<!-- @ftc-toolchain generated: subsystem-doc — scaffolded; team edits expected -->
 # Intake
 
-Single-motor intake with forward/reverse control. Works the same from any OpMode, autonomous or teleop.
+The intake: one motor held at 1000 RPM, in or out. It runs on velocity (the motor controller holds the speed), not on power.
 
 - **Package:** `org.firstinspires.ftc.teamcode.subsystems`
-- **Source:** `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/subsystems/Intake.java`
-- **Bench test:** `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/subsystems/TestIntake.java` (Driver Station: "Test Intake")
+- **Source:** `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/subsystems/Intake.java` (uses `VelocityMotor.java`, shared with the Shoot)
+- **Bench test:** `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/subsystems/TestIntake.java` (Driver Hub: "Test Intake": a = in, b = out, back = stop)
+- **In the match:** Competition TeleOp, hold the operator's D-pad up (in) or D-pad left (out / reject) (`CompTeleOpControls`)
 
 ## Hardware
 
 | Field | Type | Config name |
 | --- | --- | --- |
-| `intake` | DcMotorEx | `intake` |
+| motor | DcMotorEx (FORWARD, RUN_USING_ENCODER, brakes when stopped) | `intake` |
 
-> Config names must match the robot configuration on the Driver Station exactly.
+> The config name must match the Driver Hub configuration exactly, the encoder must be plugged in, and the motor type must be set
+> (it gives the ticks per revolution; see docs/HARDWARE_CONFIG.md).
 
 ## Functions
 
-- `intakeIn()` — run inward at `INTAKE_POWER`
-- `intakeOut()` — run outward (reject) at `INTAKE_POWER`
-- `stop()` — cut power
+- `intakeIn()` - run inward at `INTAKE_RPM`
+- `intakeOut()` - run outward at `INTAKE_RPM`
+- `stop()` - cut power
+- `getRpm()` - measured speed, RPM (negative = outward)
+- `problem()` - null, or what is wrong with the motor set-up (shown on the screen)
 
-## Tuning
+## Tuning (Panels)
 
-- `INTAKE_POWER` = 0.6 — default intake power (dashboard-tunable)
-- `INTAKE_REVERSED` = false — flip if "in" spins the wrong way (read when created)
+- `INTAKE_RPM` = 1000
+- `REVERSED` = false, `TICKS_PER_REV` = 0 (use the configured motor type) - both read when the Intake is created, i.e. at INIT
 
-## Notes / quirks
+## Notes
 
-- The old `inOne` / `inTwo` motors are gone.
+- 1000 RPM at the motor shaft needs a motor that can reach it. A motor with a gearbox rated around 435 RPM or less cannot (the screen warns).
+  Check the measured RPM on the screen.
+- Replaces the old power-controlled intake (0.6 power).
