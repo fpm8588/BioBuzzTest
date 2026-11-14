@@ -70,8 +70,10 @@ public class Constants {
             // strafePodX:  fore/aft offset of the STRAFE pod wheel, FORWARD of centre positive.
             // From the Offsets Tuner, average of 3 runs: forwardY 0.4168, 0.1921, -0.0543; strafeX 0.1711, 0.2964, 0.1304.
             // Re-run the Offsets Tuner after the other subsystems are mounted (the center of rotation moves).
+            // The pods were then moved BACK 2 in (toward the rear). Only the strafe pod's fore/aft offset depends on that, so strafePodX is
+            // 0.199 - 2.0 = -1.801; forwardPodY (sideways) is unchanged. Verify with the spin test in docs/TUNING.md (2b).
             .forwardPodY(0.185)
-            .strafePodX(0.199)
+            .strafePodX(-1.801)
             // Inches per encoder tick. Forward: Forward Tuner, average of 3 runs (0.0019672, 0.0019724, 0.0019688).
             // Strafe: Lateral Tuner, average of 3 runs (0.0019752, 0.0019754, 0.0019753; the tuner showed them negative).
             .forwardTicksToInches(0.0019695)

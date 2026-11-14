@@ -228,7 +228,7 @@ you place the robot, and keep people clear.
 | Change | Re-run |
 | --- | --- |
 | Added/removed mechanisms or weight, new battery type | Velocity tuners, braking or PIDF tuners, Offsets Tuner, mass |
-| Moved a pod | Offsets Tuner, ticks to inches |
+| Moved a pod | Shift its offset by the distance moved (strafe pod fore/aft: `strafePodX`, forward = +; forward pod sideways: `forwardPodY`, left = +), then check with the spin test (2b step 6). Run the Offsets Tuner only if the spin test fails. Ticks to inches is unchanged unless the wheel changed. |
 | Changed wheels | Everything from section 2 |
 | Different floor surface | Velocity and braking/PIDF tuners |
 
