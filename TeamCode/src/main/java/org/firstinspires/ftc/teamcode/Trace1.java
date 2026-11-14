@@ -14,14 +14,13 @@ import java.util.List;
  *   start   (56, 8, 90)
  *   path1   line   start -> (56.1281, 19.7717, 90)                                          heading held at 90 (.constant(path1))
  *   path2   curve  (56.1281, 19.7717) -> (55.7527, 126.014), control point (0, 66.6114)       heading 90 -> -90
- *   path3   line   (55.7527, 126.014, -90) -> (6.9199, 118.1818, 0)                          heading -90 -> 0
+ *   path3   line   (55.7527, 126.014, -90) -> (6.9199, 118.1818, 0) in the export; here shortened to (9, 118.5154, 0)  heading -90 -> 0
+ *           (same line, same headings, 2.1 in shorter, so the 16 in robot's back edge ends 1 in inside the wall instead of 1.08 in outside it)
  *
  * ROTATE_180 (Panels > LeaveAndPark, the same switch as every other autonomous) turns all of it 180 degrees about the field centre for blue.
  *
- * READ THE INIT SCREEN: with the settings as they are, this route fails two checks (see the numbers in docs/TRACE_ROUTES.md):
- *   - it ends at x = 6.92 facing 0 degrees, so a 16 in robot's back edge would be 1.08 in OUTSIDE the field wall (the route is refused);
- *   - path3 crosses x = 40 at about y = 123.5, 4.5 in from the estimated centre of flower tower 1 at (40, 128), so the robot's body reaches
- *     the tower (a warning only: that position is good to +/- 10 in, so check it on the real field).
+ * READ THE INIT SCREEN: path3 crosses x = 40 at about y = 123.5, 4.5 in from the estimated centre of flower tower 1 at (40, 128), so the
+ * robot's body reaches the tower (a warning only: that position is good to +/- 10 in, so check it on the real field).
  */
 @Autonomous(name = "Trace 1", group = "Competition")
 public class Trace1 extends RouteAutoBase {
@@ -39,7 +38,7 @@ public class Trace1 extends RouteAutoBase {
         Pose point2 = pose(55.7527, 126.014, -90);
         Pose point2Control1 = pose(0, 66.6114, 0);      // a control point: only its x and y are used
         Pose point3Start = pose(55.7527, 126.014, -90);
-        Pose point3 = pose(6.9199, 118.1818, 0);
+        Pose point3 = pose(9, 118.5154, 0);   // export: (6.9199, 118.1818); shortened along the same line so a 16 in robot's back edge is 1 in inside the wall
 
         return Arrays.asList(
                 line(start, path1, true),                          // Paths.line(start, path1).constant(path1)

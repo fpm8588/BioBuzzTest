@@ -20,26 +20,23 @@ The shared code is `RouteAutoBase`; a Trace class only lists its legs.
 |---|---|---|---|---|
 | 1 | line | (56, 8) | (56.1281, 19.7717) | held at 90 |
 | 2 | curve, control (0, 66.6114) | (56.1281, 19.7717) | (55.7527, 126.014) | 90 to -90 |
-| 3 | line | (55.7527, 126.014) | (6.9199, 118.1818) | -90 to 0 |
+| 3 | line | (55.7527, 126.014) | (9, 118.5154) (export: (6.9199, 118.1818)) | -90 to 0 |
 
-### Two findings (checked in simulation, not on a robot)
+### Changes from the export, and one warning
 
-* **Wall.** The route ends at x = 6.92 facing 0 degrees, so the robot's back edge is at 6.92 - L/2. With the 16 in robot size in
-  `LeaveAndPark` that is -1.08 in: outside the field, so the INIT check **refuses** it (leg 3). A 14 in robot passes (-0.08, inside the
-  0.5 in tolerance). Fixes: set the real robot length in `LeaveAndPark.ROBOT_LENGTH_IN` / `ROBOT_WIDTH_IN` if it is under about 14.8 in;
-  or change the end x to 8 or more (about 11.4 also earns LEAVE in the loading zone, like the old route); or set
-  `LeaveAndPark.ENFORCE_FIELD_CHECKS = false`, which turns off BOTH this check and the live wall stop (the robot may then drive into the wall).
-* **Flower tower 1.** Leg 3 passes x = 40 at about y = 123.5; the tower is estimated at (40, 128), so the robot's body reaches it
-  (warning only; the estimate is good to +/- 10 in). Look at the real field before a match.
+* **Leg 3 shortened.** The export ended at x = 6.92, which puts a 16 in robot's back edge 1.08 in outside the field wall, so the INIT check
+  refused it. The end point is now (9, 118.5154): the same line and the same headings, 2.1 in shorter, back edge 1 in inside the wall.
+  (If you use a different robot length, the end x must be at least L/2 - 0.5.)
+* **Flower tower 1 (warning only).** Leg 3 crosses x = 40 at about y = 123.5; the tower is estimated at (40, 128), so the robot's body reaches it
+  (the estimate is good to +/- 10 in). Look at the real field before a match.
 
 ### Simulation results (stand-in follower, real route and check code)
 
 | Case | Result |
 |---|---|
-| Red, 16 in robot, checks on | refused at INIT, robot never moves |
-| Red, 14 in robot | runs 3 legs, ends (6.92, 118.18) facing 0 |
-| Blue (ROTATE_180), 14 in robot | ends (137.08, 25.82) facing 180 |
-| Red, 16 in robot, checks off | drives it, ends (6.92, 118.18) |
+| Red, 16 in robot, checks on | passes the INIT checks, runs 3 legs, ends (9, 118.52) facing 0 |
+| Blue (ROTATE_180), 16 in robot | ends (135, 25.48) facing 180 |
+| The export's original end point, 16 in robot | refused at INIT (wall), robot never moves |
 
 Real-robot behaviour (how closely the curve is followed, the "off the path" value) still has to be seen on the field.
 
