@@ -43,10 +43,13 @@ public class Constants {
             .leftRearMotorName("lb")
             .rightFrontMotorName("rf")
             .rightRearMotorName("rb")
-            .leftFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
-            .leftRearMotorDirection(DcMotorSimple.Direction.REVERSE)
-            .rightFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
-            .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
+            // All four are the OPPOSITE of Pedro's defaults (left REVERSE, right FORWARD): on this robot every movement the follower
+            // asked for came out as its inverse. The dead wheels are not affected: Pedro's Encoder multiplies each pod's reading
+            // by its motor's direction, which cancels the direction setting.
+            .leftFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
+            .leftRearMotorDirection(DcMotorSimple.Direction.FORWARD)
+            .rightFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
+            .rightRearMotorDirection(DcMotorSimple.Direction.REVERSE)
             .xVelocity(64.3434)  // Forward Velocity tuner (one run; average a few more)
             .yVelocity(58.0994); // Lateral Velocity tuner (one run; average a few more)
 
@@ -73,10 +76,11 @@ public class Constants {
             // Strafe: Lateral Tuner, average of 3 runs (0.0019752, 0.0019754, 0.0019753; the tuner showed them negative).
             .forwardTicksToInches(0.0019695)
             .strafeTicksToInches(0.0019753)
-            // Forward pod flipped (x was reversed in the Localization Test). Strafe pod is not flipped: the Lateral Tuner read
-            // negative only because the robot was pushed right. TODO: confirm in the Localization Test (push left: y must rise).
-            .forwardEncoderDirection(Encoder.REVERSE)
-            .strafeEncoderDirection(Encoder.FORWARD);
+            // Both pods are flipped from before. Localization Test (robot moved forward, then left): x went DOWN and y went DOWN, so both
+            // read backwards. Forward pod: REVERSE -> FORWARD. Strafe pod: FORWARD -> REVERSE. Re-check after any change to the pod wiring:
+            // push forward, x must rise; push left, y must rise.
+            .forwardEncoderDirection(Encoder.FORWARD)
+            .strafeEncoderDirection(Encoder.REVERSE);
 
     public static PathConstraints pathConstraints = new PathConstraints(
             0.97, 0.1, 0.1, 0.009, 50, 1.25, 10, 1); // 0.97 = parametric end constraint, lowered for predictive braking (keep >= 0.9)

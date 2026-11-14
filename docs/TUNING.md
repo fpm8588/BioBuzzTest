@@ -39,15 +39,14 @@ Official guide for reference: https://pedropathing.com/docs/pathing/tuning
    button always works.
 6. Tuner results show on the Driver Hub and on Panels.
 
-**Check the TeleOp sticks first.** Pedro's own teleop mapping is
-`setTeleOpDrive(-left_stick_y, -left_stick_x, -right_stick_x, ...)`. A positive turn input turns the robot left
-(counter-clockwise). `CompTeleOpControls.driveTurn` currently returns `+right_stick_x`, so the right stick will
-probably turn the robot the wrong way. Fix: `return -driver.right_stick_x;`. (Strafe was already flipped.)
+**The TeleOp sticks.** `CompTeleOpControls` uses Pedro's own teleop mapping,
+`setTeleOpDrive(-left_stick_y, -left_stick_x, -right_stick_x, ...)` (a positive turn input turns the robot left, counter-clockwise), with the turn
+scaled by `TURN_SENSITIVITY` (0.8). For that to drive the way the sticks point on this robot, the four motor directions in `Constants.java` are the opposite of Pedro's defaults (see below).
 
 ## 1. Constants.java setup
 
-1. **Motor names and directions** are already `lf`, `lb`, `rf`, `rb` with left side REVERSE and right side
-   FORWARD. This matches Pedro's defaults. Confirm in the Localization Test (section 2a): left stick forward
+1. **Motor names and directions** are `lf`, `lb`, `rf`, `rb` with the left side FORWARD and the right side
+   REVERSE: the OPPOSITE of Pedro's defaults, because on this robot every movement came out inverted with the defaults. Confirm in the Localization Test (section 2a): left stick forward
    drives forward, left stick sideways strafes, right stick turns.
    If the robot drives backwards or sideways wrongly, a motor direction or name is wrong (front motors swapped
    with rear motors is the usual cause).
