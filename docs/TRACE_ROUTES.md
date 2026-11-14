@@ -56,6 +56,22 @@ Three straight lines, exactly as exported (nothing changed).
 * **Leg 2 turns exactly 180 degrees** (90 to -90) while driving. Pedro chooses which way to turn, so the robot may spin either way; the
   route is far from the walls there, so either is fine.
 
+## Trace 3
+
+Four straight lines, exactly as exported (nothing changed).
+
+| Leg | From | To | Heading |
+|---|---|---|---|
+| 1 | (56, 8) | (56.305, 34.5605) | held at 90 |
+| 2 | (56.305, 34.5605) | (20.8177, 35.3673) | held at 90 (drives sideways, to the left) |
+| 3 | (20.8177, 35.3673) | (20.2889, 117.6906) | 90 to 0 |
+| 4 | (20.2889, 117.6906) | (9.6135, 117.4992) | held at 0 |
+
+* Passes the INIT checks with the 16 in robot (end gap to the wall 1.6 in). It ends in the loading zone: LEAVE yes, PARK yes (94 sq in in the zone).
+* **Warning: flower tower 2** (estimated at (10, 44); tower 4 on blue). Leg 3 runs up x = 20.5, and the robot's body reaches the tower
+  (estimate good to +/- 10 in). Look at the real field.
+* Leg 2 drives sideways with the heading held, so it relies on the strafe dead wheel being right; the Localization Test already showed that works.
+
 ## Adding another Trace
 
 Copy `Trace1.java` (or `Trace2.java` for straight lines only), rename the class and `@Autonomous(name = ...)`, change `title()` and the poses, and list the legs with
