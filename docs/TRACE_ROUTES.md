@@ -40,8 +40,24 @@ The shared code is `RouteAutoBase`; a Trace class only lists its legs.
 
 Real-robot behaviour (how closely the curve is followed, the "off the path" value) still has to be seen on the field.
 
-## Adding Trace 2 / 3
+## Trace 2
 
-Copy `Trace1.java`, rename the class and `@Autonomous(name = ...)`, change `title()` and the poses, and list the legs with
+Three straight lines, exactly as exported (nothing changed).
+
+| Leg | From | To | Heading |
+|---|---|---|---|
+| 1 | (57.9008, 8.0085) | (60.4355, 23.7604) | held at 90 |
+| 2 | (60.4355, 23.7604) | (60.7828, 119.8323) | 90 to -90 |
+| 3 | (60.7828, 119.8323) | (9.511, 119.3137) | -90 to 0 |
+
+* Passes the INIT checks with the 16 in robot (end gap to the wall 1.5 in). It ends in the loading zone: LEAVE yes, PARK yes (78 sq in in the zone).
+* **Warning: flower tower.** Leg 3 runs along y = 119.5 and passes the estimated tower at (40, 128) (red; the mirrored tower on blue), so the robot's
+  body reaches it (estimate good to +/- 10 in). Look at the real field.
+* **Leg 2 turns exactly 180 degrees** (90 to -90) while driving. Pedro chooses which way to turn, so the robot may spin either way; the
+  route is far from the walls there, so either is fine.
+
+## Adding another Trace
+
+Copy `Trace1.java` (or `Trace2.java` for straight lines only), rename the class and `@Autonomous(name = ...)`, change `title()` and the poses, and list the legs with
 `line(from, to, constantHeading)` and `curve(from, control, to, constantHeading)`. Override `endsInZone()` to return `false` if the route is not
 meant to finish in the loading zone (then no LEAVE / PARK lines are shown).
