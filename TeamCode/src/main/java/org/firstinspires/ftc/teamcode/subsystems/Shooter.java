@@ -17,6 +17,7 @@ public class Shooter {
 
     private DcMotorEx shootOne;
     private DcMotorEx shootTwo;
+    private final boolean enabled;   // AuxSettings.ENABLED when created: false = no hardware, every command does nothing
 
     // Hardware configuration names (must match the Driver Station config)
     public static final String SHOOT_ONE_NAME = "shoot1";
@@ -34,6 +35,8 @@ public class Shooter {
     public static boolean SHOOT_TWO_REVERSED = false;
 
     public Shooter(HardwareMap hardwareMap) {
+        enabled = AuxSettings.ENABLED;
+        if (!enabled) return;
         shootOne = hardwareMap.get(DcMotorEx.class, SHOOT_ONE_NAME);
         shootOne.setDirection(SHOOT_ONE_REVERSED ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD);
         shootOne.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -42,6 +45,11 @@ public class Shooter {
         shootTwo.setDirection(SHOOT_TWO_REVERSED ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD);
         shootTwo.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         shootTwo.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+
+    /** false when AuxSettings.ENABLED was off at creation: nothing is connected and nothing moves. */
+    public boolean isEnabled() {
+        return enabled;
     }
 
     /** Spin both flywheels up to the close-range preset. */
@@ -56,17 +64,20 @@ public class Shooter {
 
     /** Spin both flywheels at any velocity, ticks/sec (positive = throw the game piece out). */
     public void setVelocity(double ticksPerSec) {
+        if (!enabled) return;
         shootOne.setVelocity(ticksPerSec);
         shootTwo.setVelocity(ticksPerSec);
     }
 
     /** Current average flywheel velocity, ticks/sec, for telemetry/statistics. */
     public double getVelocity() {
+        if (!enabled) return 0;
         return (shootOne.getVelocity() + shootTwo.getVelocity()) / 2.0;
     }
 
     /** Cut power to all actuators. Safe to call any time. */
     public void stop() {
+        if (!enabled) return;
         shootOne.setPower(0);
         shootTwo.setPower(0);
     }

@@ -35,6 +35,9 @@ public class TestIntake extends OpMode {
             intake.stop();
         }
 
+        if (!intake.isEnabled()) {
+            telemetry.addLine("DISABLED: AuxSettings.ENABLED is false, so this does nothing and needs no hardware.");
+        }
         telemetry.addData("subsystem", "Intake");
         telemetry.update();
     }
