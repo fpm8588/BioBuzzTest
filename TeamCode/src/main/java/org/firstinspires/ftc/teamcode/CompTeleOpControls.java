@@ -31,10 +31,6 @@ public class CompTeleOpControls {
     public static boolean intakeIn(Gamepad driver, Gamepad operator) { return operator.dpad_up; }
     // Intake out / reject (1000 RPM the other way): hold
     public static boolean intakeOut(Gamepad driver, Gamepad operator) { return operator.dpad_left; }
-    // Route to left gate
-    public static boolean sortLeft(Gamepad driver, Gamepad operator) { return operator.left_bumper; }
-    // Route to right gate
-    public static boolean sortRight(Gamepad driver, Gamepad operator) { return operator.right_bumper; }
 
     // ===== AUTOMATION TRIGGERS =====
     // Zero the robot's heading in the Pedro follower to the driver's current facing, for when the IMU heading drifts mid-match.

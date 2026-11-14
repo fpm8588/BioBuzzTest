@@ -71,8 +71,7 @@ is "unspecified" the code refuses to run that motor and the screen says so; you 
 `Intake.TICKS_PER_REV` (encoder ticks per revolution of the motor shaft; 0 = use the configured type). The screen also warns if the speed is
 more than the motor can reach (the SDK treats about 85 % of a motor's rated free speed as the most it can hold under load).
 
-Still switched off in `CompTeleOp` (the code is commented out and marked `DISABLED`): the **sorter** (`sortOne`, `sortTwo` servos). The **Limelight**
-(`limelight`, Ethernet device) is only used by the vision OpModes. To bring one back, add its devices to the config.
+The **Limelight** (`limelight`, Ethernet device) is only used by the vision OpModes; add it to the config only if you run those.
 
 Six motors (four drive, two mechanisms) need an Expansion Hub as well.
 

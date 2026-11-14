@@ -9,8 +9,6 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Shoot;
-// DISABLED (sorter hardware not set up yet): re-enable with the sorter code below.
-// import org.firstinspires.ftc.teamcode.subsystems.Sorter;
 import org.firstinspires.ftc.teamcode.util.Drawing;
 import org.firstinspires.ftc.teamcode.util.RobotHealthMonitor;
 import org.firstinspires.ftc.teamcode.util.Stats;
@@ -24,11 +22,7 @@ public class CompTeleOp extends OpMode {
 
     private Shoot shoot;
     private Intake intake;
-    // DISABLED (sorter hardware not set up yet):
-    // private Sorter sorter;
     private Follower follower;
-    // private boolean sortLeftPrev;
-    // private boolean sortRightPrev;
     private boolean slowActive;
     private boolean intakeInPrev;
     private Stats stats;
@@ -38,7 +32,6 @@ public class CompTeleOp extends OpMode {
     public void init() {
         shoot = new Shoot(hardwareMap);
         intake = new Intake(hardwareMap);
-        // sorter = new Sorter(hardwareMap); // DISABLED (sorter hardware not set up yet)
         follower = Constants.createFollower(hardwareMap);
         follower.update();
         stats = new Stats(telemetry);
@@ -78,15 +71,6 @@ public class CompTeleOp extends OpMode {
         else { intake.stop(); }
         if (intakeInNow && !intakeInPrev) { stats.recordIntakeCycle(); }
         intakeInPrev = intakeInNow;
-        // DISABLED (sorter hardware not set up yet):
-        // // Route to left gate
-        // boolean sortLeftNow = CompTeleOpControls.sortLeft(driver, operator);
-        // if (sortLeftNow && !sortLeftPrev) { sorter.sortLeft(); }
-        // sortLeftPrev = sortLeftNow;
-        // // Route to right gate
-        // boolean sortRightNow = CompTeleOpControls.sortRight(driver, operator);
-        // if (sortRightNow && !sortRightPrev) { sorter.sortRight(); }
-        // sortRightPrev = sortRightNow;
 
         // --- Automations ---
         if (CompTeleOpControls.resetHeading(driver, operator)) resetHeading();
