@@ -5,7 +5,7 @@ The intake: one motor held at 1000 RPM, in or out. It runs on velocity (the moto
 - **Package:** `org.firstinspires.ftc.teamcode.subsystems`
 - **Source:** `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/subsystems/Intake.java` (uses `VelocityMotor.java`, shared with the Shoot)
 - **Bench test:** `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/subsystems/TestIntake.java` (Driver Hub: "Test Intake": a = in, b = out, back = stop)
-- **In the match:** Competition TeleOp, hold the operator's D-pad up (in) or D-pad left (out / reject) (`CompTeleOpControls`)
+- **In the match:** Competition TeleOp, hold the operator's left trigger (in) or D-pad left (out / reject) (`CompTeleOpControls`)
 
 ## Hardware
 

@@ -27,8 +27,8 @@ public class CompTeleOpControls {
     // ===== ACTIONS =====
     // Shoot: hold to spin the flywheel at 3000 RPM, release to stop
     public static boolean shoot(Gamepad driver, Gamepad operator) { return operator.right_trigger > 0.1; }
-    // Intake in (1000 RPM): hold
-    public static boolean intakeIn(Gamepad driver, Gamepad operator) { return operator.dpad_up; }
+    // Intake in (1000 RPM): hold the operator's left trigger
+    public static boolean intakeIn(Gamepad driver, Gamepad operator) { return operator.left_trigger > 0.1; }
     // Intake out / reject (1000 RPM the other way): hold
     public static boolean intakeOut(Gamepad driver, Gamepad operator) { return operator.dpad_left; }
 
