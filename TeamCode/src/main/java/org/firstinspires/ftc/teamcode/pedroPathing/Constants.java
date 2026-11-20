@@ -50,8 +50,8 @@ public class Constants {
             .leftRearMotorDirection(DcMotorSimple.Direction.FORWARD)
             .rightFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
             .rightRearMotorDirection(DcMotorSimple.Direction.REVERSE)
-            .xVelocity(64.3434)  // Forward Velocity tuner (one run; average a few more)
-            .yVelocity(58.0994); // Lateral Velocity tuner (one run; average a few more)
+            .xVelocity(62.8507)  // Forward Velocity tuner, average of 4 runs after the weight was added (62.8331, 62.8842, 63.0090, 62.6764)
+            .yVelocity(53.5949); // Lateral Velocity tuner, average of 4 runs after the weight was added (53.8077, 53.5114, 53.6477, 53.4128)
 
     // Two goBILDA dead wheels + the Control Hub IMU (no Pinpoint). Pod encoders plug into REV hub encoder
     // ports; heading comes from the hub IMU. See docs/ODOMETRY.md for placement, wiring and verification.
