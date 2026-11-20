@@ -60,8 +60,8 @@ motor type you actually have.
 
 | Config name | Type | Subsystem | Notes |
 | --- | --- | --- | --- |
-| `intake` | motor, **encoder plugged in** | `Intake` | Held at 1000 RPM (velocity control). `Intake.REVERSED` flips it if "in" spins the wrong way. |
-| `shoot` | motor, **encoder plugged in** | `Shoot` | Held at 3000 RPM (velocity control). `Shoot.REVERSED` flips it if it throws the wrong way. |
+| `intake` | motor, **encoder plugged in** | `Intake` | Held at 900 RPM (velocity control). `Intake.REVERSED` flips it if "in" spins the wrong way. |
+| `shoot` | motor, **encoder plugged in** | `Shoot` | Held at 2100 RPM (velocity control). `Shoot.REVERSED` flips it if it throws the wrong way. |
 
 Both are on an Expansion Hub motor port (suggested: `intake` port 0, `shoot` port 1). Directions are set in code: don't reverse anything in the config.
 

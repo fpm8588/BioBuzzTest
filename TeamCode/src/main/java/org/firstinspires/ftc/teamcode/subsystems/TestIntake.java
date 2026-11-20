@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
  *   a -> intakeIn() at Intake.INTAKE_RPM
  *   b -> intakeOut()
  *   back -> stop()
- * Shows the measured RPM, so you can check it reaches 1000 (change Intake.INTAKE_RPM in Panels to test other speeds).
+ * Shows the measured RPM, so you can check it reaches 900 (change Intake.INTAKE_RPM in Panels to test other speeds).
  */
 @TeleOp(name = "Test Intake", group = "subsystems")
 public class TestIntake extends OpMode {

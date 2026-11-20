@@ -4,7 +4,7 @@ import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 /**
- * The shooter: one flywheel motor held at SHOOT_RPM (3000), on velocity control (the motor controller holds the speed).
+ * The shooter: one flywheel motor held at SHOOT_RPM (2100), on velocity control (the motor controller holds the speed).
  * Works the same from any OpMode, autonomous or teleop: create it with the hardware map, call spin() / stop().
  */
 @Configurable
@@ -14,7 +14,7 @@ public class Shoot {
     public static final String MOTOR_NAME = "shoot";
 
     // --- Tunable constants (live-editable in Panels; the two REVERSED / TICKS ones are read when the Shoot is created) ---
-    public static double SHOOT_RPM = 3000;
+    public static double SHOOT_RPM = 2100;
 
     /** The flywheel counts as up to speed when it is within this many RPM of SHOOT_RPM. */
     public static double AT_SPEED_TOLERANCE_RPM = 100;

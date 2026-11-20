@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
  * Bench test for the Shoot subsystem (gamepad1):
  *   a -> spin() to Shoot.SHOOT_RPM
  *   b or back -> stop()
- * Shows the measured RPM, so you can check it reaches 3000 (change Shoot.SHOOT_RPM in Panels to test other speeds).
+ * Shows the measured RPM, so you can check it reaches 2100 (change Shoot.SHOOT_RPM in Panels to test other speeds).
  */
 @TeleOp(name = "Test Shoot", group = "subsystems")
 public class TestShoot extends OpMode {

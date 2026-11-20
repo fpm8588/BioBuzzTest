@@ -61,10 +61,10 @@ public class CompTeleOp extends OpMode {
         follower.update();
 
         // --- Actions ---
-        // Shoot: held at Shoot.SHOOT_RPM (3000) while the button is held
+        // Shoot: held at Shoot.SHOOT_RPM (2100) while the button is held
         if (CompTeleOpControls.shoot(driver, operator)) { shoot.spin(); } // Shoot: shoot
         else { shoot.stop(); }
-        // Intake: held at Intake.INTAKE_RPM (1000), in or out
+        // Intake: held at Intake.INTAKE_RPM (900), in or out
         boolean intakeInNow = CompTeleOpControls.intakeIn(driver, operator);
         if (intakeInNow) { intake.intakeIn(); } // Intake in: intakeIn
         else if (CompTeleOpControls.intakeOut(driver, operator)) { intake.intakeOut(); } // Intake out / reject: intakeOut

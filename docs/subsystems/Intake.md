@@ -1,6 +1,6 @@
 # Intake
 
-The intake: one motor held at 1000 RPM, in or out. It runs on velocity (the motor controller holds the speed), not on power.
+The intake: one motor held at 900 RPM, in or out. It runs on velocity (the motor controller holds the speed), not on power.
 
 - **Package:** `org.firstinspires.ftc.teamcode.subsystems`
 - **Source:** `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/subsystems/Intake.java` (uses `VelocityMotor.java`, shared with the Shoot)
@@ -26,11 +26,11 @@ The intake: one motor held at 1000 RPM, in or out. It runs on velocity (the moto
 
 ## Tuning (Panels)
 
-- `INTAKE_RPM` = 1000
+- `INTAKE_RPM` = 900
 - `REVERSED` = false, `TICKS_PER_REV` = 0 (use the configured motor type) - both read when the Intake is created, i.e. at INIT
 
 ## Notes
 
-- 1000 RPM at the motor shaft needs a motor that can reach it. A motor with a gearbox rated around 435 RPM or less cannot (the screen warns).
+- 900 RPM at the motor shaft needs a motor that can reach it. A motor with a gearbox rated around 435 RPM or less cannot (the screen warns).
   Check the measured RPM on the screen.
 - Replaces the old power-controlled intake (0.6 power).

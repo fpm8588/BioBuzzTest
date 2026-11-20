@@ -25,11 +25,11 @@ public class CompTeleOpControls {
     public static boolean slowMode(Gamepad driver, Gamepad operator) { return driver.left_trigger > 0.5; }
 
     // ===== ACTIONS =====
-    // Shoot: hold to spin the flywheel at 3000 RPM, release to stop
+    // Shoot: hold to spin the flywheel at 2100 RPM, release to stop
     public static boolean shoot(Gamepad driver, Gamepad operator) { return operator.right_trigger > 0.1; }
-    // Intake in (1000 RPM): hold the operator's left trigger
+    // Intake in (900 RPM): hold the operator's left trigger
     public static boolean intakeIn(Gamepad driver, Gamepad operator) { return operator.left_trigger > 0.1; }
-    // Intake out / reject (1000 RPM the other way): hold
+    // Intake out / reject (900 RPM the other way): hold
     public static boolean intakeOut(Gamepad driver, Gamepad operator) { return operator.dpad_left; }
 
     // ===== AUTOMATION TRIGGERS =====

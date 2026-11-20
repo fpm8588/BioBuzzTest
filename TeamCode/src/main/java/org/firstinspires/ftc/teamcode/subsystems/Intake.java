@@ -4,7 +4,7 @@ import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 /**
- * The intake: one motor held at INTAKE_RPM (1000) on velocity control (the motor controller holds the speed), in or out.
+ * The intake: one motor held at INTAKE_RPM (900) on velocity control (the motor controller holds the speed), in or out.
  * Works the same from any OpMode, autonomous or teleop: create it with the hardware map, call intakeIn() / intakeOut() / stop().
  */
 @Configurable
@@ -14,7 +14,7 @@ public class Intake {
     public static final String MOTOR_NAME = "intake";
 
     // --- Tunable constants (live-editable in Panels; the two REVERSED / TICKS ones are read when the Intake is created) ---
-    public static double INTAKE_RPM = 1000;
+    public static double INTAKE_RPM = 900;
 
     /** true if "in" spins the wrong way: flip it here instead of swapping wires. */
     public static boolean REVERSED = false;
