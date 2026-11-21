@@ -21,7 +21,8 @@ import java.util.List;
 
 /*
  * The shared part of the "Trace" autonomous routes (Trace1, Trace2, ...): a route that is just a chain of lines and curves from a Pedro
- * Pathing export, driven exactly like Leave and Park. No Limelight, no obstacle avoidance, no intake or shooter.
+ * Pathing export, driven exactly like Leave and Park. No Limelight, no obstacle avoidance. (A subclass may add one step before the route
+ * through the hooks below, as Trace3Shoot does; the plain Traces use none.)
  *
  * A subclass only lists its poses (see Trace1). Everything else is here and is the same as Leave and Park:
  *   - the same settings (Panels > LeaveAndPark): ROTATE_180 (blue = the whole route turned 180 degrees about the field centre), MAX_POWER,
@@ -96,6 +97,27 @@ abstract class RouteAutoBase extends LinearOpMode {
     /** true if the route is meant to end in the loading zone: only then the LEAVE / PARK lines and warnings are shown. */
     protected boolean endsInZone() {
         return true;
+    }
+
+    // ---- optional hooks (all do nothing here, so the plain Trace routes are unchanged) ----
+
+    /** Called once at INIT, before the checks are shown: create any extra hardware here (a missing device then fails at INIT, not at START). */
+    protected void onInit() {
+    }
+
+    /** Called every INIT loop: add any extra lines to the INIT screen. */
+    protected void initTelemetry() {
+    }
+
+    /**
+     * Called once after START and after the checks pass, with the robot standing still, BEFORE the route starts. Do the extra step here and
+     * return when it is done; it must also return promptly when opModeIsActive() turns false. The route's timers start after it returns.
+     */
+    protected void beforeRoute() {
+    }
+
+    /** Called once when the OpMode ends for any reason (route done, aborted, STOP pressed, an error): switch any extra hardware off. */
+    protected void onFinish() {
     }
 
     // ---- helpers for the subclasses ----
@@ -190,12 +212,14 @@ abstract class RouteAutoBase extends LinearOpMode {
     public void runOpMode() {
         Follower follower = Constants.createFollower(hardwareMap);
         Drawing.init();
+        onInit();
 
         // Show the checks while waiting, and refresh them so a value changed in Panels shows up straight away.
         while (opModeInInit()) {
             Setup s = build();
             telemetry.addLine(title() + ": drive the route and stop. No camera, no avoidance.");
             LeaveAndPark.showReport(telemetry, s.report, true);
+            initTelemetry();
             telemetry.update();
             sleep(100);
         }
@@ -227,6 +251,8 @@ abstract class RouteAutoBase extends LinearOpMode {
         ElapsedTime clock = new ElapsedTime();
 
         try {
+            beforeRoute();
+            clock.reset(); // the start delay and the route timeout count from here, after any step before the route
             while (opModeIsActive()) {
                 follower.update();
                 Pose pose = follower.getPose();
@@ -287,7 +313,11 @@ abstract class RouteAutoBase extends LinearOpMode {
                 Drawing.drawDebug(follower);
             }
         } finally {
-            follower.setMaxPower(1.0); // the follower settings are shared with the other OpModes
+            try {
+                onFinish();
+            } finally {
+                follower.setMaxPower(1.0); // the follower settings are shared with the other OpModes
+            }
         }
     }
 }
