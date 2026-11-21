@@ -82,12 +82,39 @@ Shoots first, then drives the Trace 3 route (it extends `Trace3`, so it has the 
 3. Both are switched off.
 4. The Trace 3 route runs. The route timeout and start delay count from here.
 
-The settings are in Panels (class `Trace3Shoot`): raise `SPIN_UP_MIN_SEC` for a longer wait before the intake; set both it and `SPIN_UP_MAX_SEC`
+The shoot settings are in Panels under class `ShootSequence` (shared by every auto that shoots first): raise `SPIN_UP_MIN_SEC` for a longer wait before the intake; set both it and `SPIN_UP_MAX_SEC`
 to 0 to start the intake at once. The shoot and intake step takes up to 11 s of the 30 s autonomous. Needs the motors `shoot` and `intake` in the configuration (docs/HARDWARE_CONFIG.md). Both motors are switched off
 however the OpMode ends, including STOP. The INIT screen shows a SHOOT PROBLEM / INTAKE PROBLEM line if a motor is misconfigured.
 
 Simulation (stand-in follower and motors): intake ran 6.0 s, both switched off before the first leg, route ends at (9.61, 117.50) on red and
 (134.39, 26.50) on blue; STOP at any point switches both motors off.
+
+## Trace 4
+
+Waits 10 s, shoots, then drives a short route. In order:
+
+1. START: wait `Trace4.DELAY_SEC` = 10 s, robot still.
+2. The shoot step, exactly as in Trace 3 Shoot (`ShootSequence`: shooter to 2100 RPM, intake 6 s once the shooter is up to speed and at least 3 s
+   have passed, both off).
+3. The route:
+
+| Leg | From | To | Heading |
+|---|---|---|---|
+| 1 | (59.5915, **136**) | (59.6372, 117.1729) | -90 to 0 (turns +90) |
+| 2 | (59.6372, 117.1729) | (10.6668, 122.3354) | held at 0 (drives to the left) |
+
+* **Start changed from the export.** The export's start y was 132.6591. For the 16 in robot facing -90 (back to the top wall) that is 3.3 in off the
+  wall, and the start rules say the robot must start touching the perimeter wall, so the INIT check **refused** it. The start is now y = 136 (the
+  robot's back edge on the wall at y = 144), so leg 1 is 3.3 in longer than in the export. Place the robot with its back against the top wall at
+  x about 59.6, facing down the field.
+* Passes the other INIT checks with the 16 in robot (the end pose is 2.7 in inside the left wall).
+* **Warning: flower tower 1** (estimated at (40, 128); tower 3 on blue). Both legs pass it, and the robot's body reaches it (the estimate is good
+  to +/- 10 in). Look at the real field.
+* **Time:** 10 s + up to 11 s of shoot step = up to 21 s of the 30 s autonomous before the route starts, leaving about 9 s for the route. Lower
+  `DELAY_SEC` or `ShootSequence.SPIN_UP_MAX_SEC` if the route does not finish.
+
+Simulation (stand-in follower and motors): shooter started 10.0 s after START, intake 3.0 s later for 6.0 s, both off before the first leg, route ends at
+(10.67, 122.34) on red and (133.33, 21.66) on blue; STOP during the wait or the shoot step leaves everything off and undriven.
 
 ## Adding another Trace
 
