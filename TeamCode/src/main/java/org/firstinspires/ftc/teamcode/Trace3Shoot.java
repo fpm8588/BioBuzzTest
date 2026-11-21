@@ -11,8 +11,9 @@ import org.firstinspires.ftc.teamcode.subsystems.Shoot;
  * TRACE 3 + SHOOT: shoots first, then drives the Trace 3 route.
  *
  *   1. START: the shooter spins up to Shoot.SHOOT_RPM (2100). The robot stays where it is.
- *   2. Once the shooter is up to speed (or after SPIN_UP_MAX_SEC, whichever is first) the intake runs in at Intake.INTAKE_RPM (900) for
- *      INTAKE_SEC (6 s), feeding the game pieces to the shooter, which keeps spinning.
+ *   2. The intake starts when BOTH are true: at least SPIN_UP_MIN_SEC (3 s) have passed since the shooter started, and the shooter is up to
+ *      speed (or SPIN_UP_MAX_SEC, 5 s, has passed, so a shooter that never gets there does not hold the auto up for ever). It runs in at
+ *      Intake.INTAKE_RPM (900) for INTAKE_SEC (6 s), feeding the game pieces to the shooter, which keeps spinning.
  *   3. Both are switched off.
  *   4. The robot drives the Trace 3 route exactly as Trace 3 does (same poses, same checks, same safety stops, red / blue switch).
  *
@@ -22,7 +23,7 @@ import org.firstinspires.ftc.teamcode.subsystems.Shoot;
  * Needs the same hardware as the TeleOp: motors "shoot" and "intake" on the Expansion Hub with their encoders (docs/HARDWARE_CONFIG.md).
  * The two motors are switched off when the OpMode ends for any reason, including STOP.
  *
- * Time: step 1 to 3 take up to SPIN_UP_MAX_SEC + INTAKE_SEC = 9 s of the 30 s autonomous, then the route.
+ * Time: step 1 to 3 take up to SPIN_UP_MAX_SEC + INTAKE_SEC = 11 s of the 30 s autonomous, then the route.
  */
 @Configurable
 @Autonomous(name = "Trace 3 Shoot", group = "Competition")
@@ -31,11 +32,14 @@ public class Trace3Shoot extends Trace3 {
     /** How long the intake runs, seconds. */
     public static double INTAKE_SEC = 6.0;
 
+    /** The intake never starts sooner than this after the shooter starts, even if the shooter is already up to speed, seconds. Raise it for a longer wait. */
+    public static double SPIN_UP_MIN_SEC = 3.0;
+
     /**
-     * Longest wait for the shooter to reach speed before the intake starts anyway, seconds. 0 = do not wait: the intake starts at once.
-     * With the shooter at 2100 RPM it should be up to speed in about a second.
+     * Longest wait for the shooter to reach speed before the intake starts anyway, seconds (counted from the shooter starting; if it is
+     * less than SPIN_UP_MIN_SEC the minimum wins). Set both to 0 to start the intake at once.
      */
-    public static double SPIN_UP_MAX_SEC = 3.0;
+    public static double SPIN_UP_MAX_SEC = 5.0;
 
     private Shoot shoot;
     private Intake intake;
@@ -53,8 +57,8 @@ public class Trace3Shoot extends Trace3 {
 
     @Override
     protected void initTelemetry() {
-        telemetry.addLine(String.format("First: shooter at %.0f RPM, then intake at %.0f RPM for %.1f s, both off, then the Trace 3 route.",
-                Shoot.SHOOT_RPM, Intake.INTAKE_RPM, INTAKE_SEC));
+        telemetry.addLine(String.format("First: shooter at %.0f RPM, %.1f s later the intake at %.0f RPM for %.1f s, both off, then the Trace 3 route.",
+                Shoot.SHOOT_RPM, SPIN_UP_MIN_SEC, Intake.INTAKE_RPM, INTAKE_SEC));
         if (shoot.problem() != null) telemetry.addData("SHOOT PROBLEM", shoot.problem());
         if (intake.problem() != null) telemetry.addData("INTAKE PROBLEM", intake.problem());
     }
@@ -63,10 +67,10 @@ public class Trace3Shoot extends Trace3 {
     protected void beforeRoute() {
         ElapsedTime timer = new ElapsedTime();
 
-        // 1. Shooter on, wait for it to reach speed.
+        // 1. Shooter on. Wait at least SPIN_UP_MIN_SEC, and then until it is up to speed (but no longer than SPIN_UP_MAX_SEC).
         shoot.spin();
-        while (opModeIsActive() && timer.seconds() < SPIN_UP_MAX_SEC && !shoot.isAtSpeed()) {
-            telemetry.addData("state", "spinning up the shooter");
+        while (opModeIsActive() && (timer.seconds() < SPIN_UP_MIN_SEC || (timer.seconds() < SPIN_UP_MAX_SEC && !shoot.isAtSpeed()))) {
+            telemetry.addData("state", "spinning up the shooter: %.1f s", timer.seconds());
             telemetry.addData("shoot RPM", "%.0f (target %.0f)", shoot.getRpm(), Shoot.SHOOT_RPM);
             telemetry.update();
             sleep(20);

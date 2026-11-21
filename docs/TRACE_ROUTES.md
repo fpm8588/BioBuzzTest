@@ -77,13 +77,13 @@ Four straight lines, exactly as exported (nothing changed).
 Shoots first, then drives the Trace 3 route (it extends `Trace3`, so it has the same poses, checks and safety stops).
 
 1. START: the shooter spins up to `Shoot.SHOOT_RPM` (2100). The robot stays put.
-2. When the shooter is up to speed (or after `SPIN_UP_MAX_SEC` = 3 s, whichever is first) the intake runs in at `Intake.INTAKE_RPM` (900) for
-   `INTAKE_SEC` = 6 s.
+2. The intake starts when at least `SPIN_UP_MIN_SEC` = 3 s have passed since the shooter started AND the shooter is up to speed (or
+   `SPIN_UP_MAX_SEC` = 5 s has passed, whichever is first). It then runs in at `Intake.INTAKE_RPM` (900) for `INTAKE_SEC` = 6 s.
 3. Both are switched off.
 4. The Trace 3 route runs. The route timeout and start delay count from here.
 
-Both settings are in Panels (class `Trace3Shoot`). Set `SPIN_UP_MAX_SEC` to 0 to start the intake at once. The shoot and intake step takes up to
-9 s of the 30 s autonomous. Needs the motors `shoot` and `intake` in the configuration (docs/HARDWARE_CONFIG.md). Both motors are switched off
+The settings are in Panels (class `Trace3Shoot`): raise `SPIN_UP_MIN_SEC` for a longer wait before the intake; set both it and `SPIN_UP_MAX_SEC`
+to 0 to start the intake at once. The shoot and intake step takes up to 11 s of the 30 s autonomous. Needs the motors `shoot` and `intake` in the configuration (docs/HARDWARE_CONFIG.md). Both motors are switched off
 however the OpMode ends, including STOP. The INIT screen shows a SHOOT PROBLEM / INTAKE PROBLEM line if a motor is misconfigured.
 
 Simulation (stand-in follower and motors): intake ran 6.0 s, both switched off before the first leg, route ends at (9.61, 117.50) on red and
