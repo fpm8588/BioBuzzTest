@@ -15,12 +15,12 @@ public class CompTeleOpControls {
     // the RIGHT; and a positive turn is counter-clockwise (left) but the stick is positive to the right. So all three are negated.
     // (The motor directions in Constants.java are set so that the robot then drives the way the stick points.)
     /**
-     * Drive mode. false (as shipped) = ROBOT-centric: forward on the stick is always the way the robot's front points. true = FIELD-centric:
-     * forward on the stick is always the same way on the field, so the controls turn with the robot (the follower's heading is zero at the
-     * facing the robot had at INIT; driver A + B together re-zeroes it to the current facing). It was field-centric before, which feels like
-     * the controls "switch" every time the robot turns.
+     * Drive mode. true (as shipped) = FIELD-centric: forward on the stick is always the same way on the field, however the robot is turned.
+     * The follower's heading is zero at the facing the robot has at INIT, and that facing is "forward": at INIT point the robot AWAY from
+     * you (down the field), or press the driver's A + B together while it faces that way, which re-zeroes the heading to the current
+     * facing (do that any time the heading drifts). false = ROBOT-centric: forward on the stick is where the robot's front points.
      */
-    public static boolean FIELD_CENTRIC = false;
+    public static boolean FIELD_CENTRIC = true;
 
     /** Sticks closer to centre than this count as zero (a worn stick that does not rest at exactly 0 would creep the robot). Rescaled so full stick is still 1. */
     public static double STICK_DEADZONE = 0.08;
