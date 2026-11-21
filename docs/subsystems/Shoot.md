@@ -6,7 +6,7 @@ The shooter: one flywheel motor held at 2100 RPM. It runs on velocity (the motor
 - **Package:** `org.firstinspires.ftc.teamcode.subsystems`
 - **Source:** `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/subsystems/Shoot.java` (uses `VelocityMotor.java`, shared with the Intake)
 - **Bench test:** `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/subsystems/TestShoot.java` (Driver Hub: "Test Shoot": a = spin, b or back = stop)
-- **In the match:** Competition TeleOp, hold the operator's right trigger (`CompTeleOpControls.shoot`)
+- **In the match:** Competition TeleOp, hold the driver's (controller 1) right trigger (`CompTeleOpControls.shoot`)
 
 ## Hardware
 

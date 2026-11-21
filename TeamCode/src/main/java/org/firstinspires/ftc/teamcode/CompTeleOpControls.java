@@ -39,15 +39,16 @@ public class CompTeleOpControls {
     public static double driveTurn(Gamepad driver, Gamepad operator) { return -deadzone(driver.right_stick_x) * TURN_SENSITIVITY; }
 
     // ===== SLOW MODE =====
-    public static boolean slowMode(Gamepad driver, Gamepad operator) { return driver.left_trigger > 0.5; }
+    // Driver's left BUMPER (it was the left trigger; that is the intake now).
+    public static boolean slowMode(Gamepad driver, Gamepad operator) { return driver.left_bumper; }
 
     // ===== ACTIONS =====
-    // Shoot: hold to spin the flywheel at 2100 RPM, release to stop
-    public static boolean shoot(Gamepad driver, Gamepad operator) { return operator.right_trigger > 0.1; }
-    // Intake in (900 RPM): hold the operator's left trigger
-    public static boolean intakeIn(Gamepad driver, Gamepad operator) { return operator.left_trigger > 0.1; }
+    // Shoot: hold the DRIVER's right trigger to spin the flywheel at 2100 RPM, release to stop
+    public static boolean shoot(Gamepad driver, Gamepad operator) { return driver.right_trigger > 0.1; }
+    // Intake in (900 RPM): hold the DRIVER's left trigger
+    public static boolean intakeIn(Gamepad driver, Gamepad operator) { return driver.left_trigger > 0.1; }
     // Intake out / reject (900 RPM the other way): hold
-    public static boolean intakeOut(Gamepad driver, Gamepad operator) { return operator.dpad_left; }
+    public static boolean intakeOut(Gamepad driver, Gamepad operator) { return driver.dpad_left; }
 
     // ===== AUTOMATION TRIGGERS =====
     // Zero the robot's heading in the Pedro follower to the driver's current facing, for when the IMU heading drifts mid-match.
