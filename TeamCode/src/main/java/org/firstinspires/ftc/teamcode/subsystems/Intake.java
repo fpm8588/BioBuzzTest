@@ -1,52 +1,55 @@
-// @ftc-toolchain generated: subsystem — scaffolded; team edits expected
 package org.firstinspires.ftc.teamcode.subsystems;
 
 import com.bylazar.configurables.annotations.Configurable;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 /**
- * Dual-motor intake with forward/reverse control
+ * The intake: one motor held at INTAKE_RPM (900) on velocity control (the motor controller holds the speed), in or out.
+ * Works the same from any OpMode, autonomous or teleop: create it with the hardware map, call intakeIn() / intakeOut() / stop().
  */
 @Configurable
 public class Intake {
 
-    private DcMotorEx inOne;
-    private DcMotorEx inTwo;
+    // Hardware configuration name (must match the Driver Hub configuration, case-sensitive)
+    public static final String MOTOR_NAME = "intake";
 
-    // Hardware configuration names (must match the Driver Station config)
-    public static final String IN_ONE_NAME = "inOne";
-    public static final String IN_TWO_NAME = "inTwo";
+    // --- Tunable constants (live-editable in Panels; the two REVERSED / TICKS ones are read when the Intake is created) ---
+    public static double INTAKE_RPM = 900;
 
-    // --- Tunable constants (live-editable via the dashboard) ---
-    public static double INTAKE_POWER = 0.6; // default intake power
+    /** true if "in" spins the wrong way: flip it here instead of swapping wires. */
+    public static boolean REVERSED = false;
+
+    /** Encoder ticks per revolution of the motor shaft. 0 = take it from the motor type chosen in the Driver Hub configuration (best). */
+    public static double TICKS_PER_REV = 0;
+
+    private final VelocityMotor motor;
 
     public Intake(HardwareMap hardwareMap) {
-        inOne = hardwareMap.get(DcMotorEx.class, IN_ONE_NAME);
-        inOne.setDirection(DcMotorSimple.Direction.FORWARD);
-        inOne.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        inTwo = hardwareMap.get(DcMotorEx.class, IN_TWO_NAME);
-        inTwo.setDirection(DcMotorSimple.Direction.REVERSE);
-        inTwo.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motor = new VelocityMotor(hardwareMap, MOTOR_NAME, REVERSED, TICKS_PER_REV, false);
     }
 
-    /** Run both intake motors inward at the default power. */
+    /** Run inward at INTAKE_RPM. */
     public void intakeIn() {
-        inOne.setPower(INTAKE_POWER);
-        inTwo.setPower(INTAKE_POWER);
+        motor.setRpm(INTAKE_RPM);
     }
 
-    /** Run both intake motors outward (reject/reverse) at the default power. */
+    /** Run outward (reject) at INTAKE_RPM. */
     public void intakeOut() {
-        inOne.setPower(-INTAKE_POWER);
-        inTwo.setPower(-INTAKE_POWER);
+        motor.setRpm(-INTAKE_RPM);
     }
 
-    /** Cut power to all actuators. Safe to call any time. */
+    /** Stop. Safe to call any time. */
     public void stop() {
-        inOne.setPower(0);
-        inTwo.setPower(0);
+        motor.stop();
+    }
+
+    /** Measured intake speed, RPM (negative = running outward). */
+    public double getRpm() {
+        return motor.getRpm();
+    }
+
+    /** null if all is well, else what is wrong with the motor set-up (for the screen). */
+    public String problem() {
+        return motor.problem(INTAKE_RPM);
     }
 }

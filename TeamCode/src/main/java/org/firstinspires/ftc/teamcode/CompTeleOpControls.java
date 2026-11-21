@@ -11,35 +11,46 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 public class CompTeleOpControls {
 
     // ===== DRIVE =====
-    // forward is negative on the stick
-    public static double driveForward(Gamepad driver, Gamepad operator) { return -driver.left_stick_y; }
-    public static double driveStrafe(Gamepad driver, Gamepad operator) { return driver.left_stick_x; }
-    public static double driveTurn(Gamepad driver, Gamepad operator) { return driver.right_stick_x; }
+    // Pedro's own teleop mapping: forward is negative on the stick; Pedro's strafe is positive to the LEFT but the stick is positive to
+    // the RIGHT; and a positive turn is counter-clockwise (left) but the stick is positive to the right. So all three are negated.
+    // (The motor directions in Constants.java are set so that the robot then drives the way the stick points.)
+    /**
+     * Drive mode. true (as shipped) = FIELD-centric: forward on the stick is always the same way on the field, however the robot is turned.
+     * The follower's heading is zero at the facing the robot has at INIT, and that facing is "forward": at INIT point the robot AWAY from
+     * you (down the field), or press the driver's A + B together while it faces that way, which re-zeroes the heading to the current
+     * facing (do that any time the heading drifts). false = ROBOT-centric: forward on the stick is where the robot's front points.
+     */
+    public static boolean FIELD_CENTRIC = true;
+
+    /** Sticks closer to centre than this count as zero (a worn stick that does not rest at exactly 0 would creep the robot). Rescaled so full stick is still 1. */
+    public static double STICK_DEADZONE = 0.08;
+
+    private static double deadzone(double v) {
+        double a = Math.abs(v);
+        if (a < STICK_DEADZONE) return 0;
+        return Math.signum(v) * (a - STICK_DEADZONE) / (1.0 - STICK_DEADZONE);
+    }
+
+    public static double driveForward(Gamepad driver, Gamepad operator) { return -deadzone(driver.left_stick_y); }
+    public static double driveStrafe(Gamepad driver, Gamepad operator) { return -deadzone(driver.left_stick_x); }
+
+    /** How much of the stick the turn uses: 1.0 = full, lower = gentler (it is 0.8; it was 1.0). Slow mode still multiplies this by 0.4. */
+    public static double TURN_SENSITIVITY = 0.8;
+    public static double driveTurn(Gamepad driver, Gamepad operator) { return -deadzone(driver.right_stick_x) * TURN_SENSITIVITY; }
 
     // ===== SLOW MODE =====
-    public static boolean slowMode(Gamepad driver, Gamepad operator) { return driver.left_trigger > 0.5; }
+    // Driver's left BUMPER (it was the left trigger; that is the intake now).
+    public static boolean slowMode(Gamepad driver, Gamepad operator) { return driver.left_bumper; }
 
     // ===== ACTIONS =====
-    // Shooter high-velocity preset
-    public static boolean shooterHigh(Gamepad driver, Gamepad operator) { return operator.right_trigger > 0.1; }
-    // Shooter low-velocity preset
-    public static boolean shooterLow(Gamepad driver, Gamepad operator) { return operator.left_trigger > 0.1; }
-    // Intake in
-    public static boolean intakeIn(Gamepad driver, Gamepad operator) { return operator.dpad_up; }
-    // Intake out / reject
-    public static boolean intakeOut(Gamepad driver, Gamepad operator) { return operator.dpad_left; }
-    // Lift to top position
-    public static boolean liftUp(Gamepad driver, Gamepad operator) { return operator.x; }
-    // Lift to middle position
-    public static boolean liftMid(Gamepad driver, Gamepad operator) { return operator.a; }
-    // Lift to bottom position
-    public static boolean liftDown(Gamepad driver, Gamepad operator) { return operator.b; }
-    // Route to left gate
-    public static boolean sortLeft(Gamepad driver, Gamepad operator) { return operator.left_bumper; }
-    // Route to right gate
-    public static boolean sortRight(Gamepad driver, Gamepad operator) { return operator.right_bumper; }
+    // Shoot: hold the DRIVER's right trigger to spin the flywheel at 2100 RPM, release to stop
+    public static boolean shoot(Gamepad driver, Gamepad operator) { return driver.right_trigger > 0.1; }
+    // Intake in (900 RPM): hold the DRIVER's left trigger
+    public static boolean intakeIn(Gamepad driver, Gamepad operator) { return driver.left_trigger > 0.1; }
+    // Intake out / reject (900 RPM the other way): hold
+    public static boolean intakeOut(Gamepad driver, Gamepad operator) { return driver.dpad_left; }
 
     // ===== AUTOMATION TRIGGERS =====
-    // Zero the robot's heading in the Pedro follower to the driver's current facing, for when the IMU/Pinpoint heading drifts mid-match.
+    // Zero the robot's heading in the Pedro follower to the driver's current facing, for when the IMU heading drifts mid-match.
     public static boolean resetHeading(Gamepad driver, Gamepad operator) { return driver.a && driver.b; }
 }

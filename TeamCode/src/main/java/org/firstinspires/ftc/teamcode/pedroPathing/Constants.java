@@ -3,13 +3,15 @@ package org.firstinspires.ftc.teamcode.pedroPathing;
 
 import com.pedropathing.control.FilteredPIDFCoefficients;
 import com.pedropathing.control.PIDFCoefficients;
+import com.pedropathing.control.PredictiveBrakingCoefficients;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.follower.FollowerConstants;
 import com.pedropathing.ftc.FollowerBuilder;
 import com.pedropathing.ftc.drivetrains.MecanumConstants;
-import com.pedropathing.ftc.localization.constants.PinpointConstants;
+import com.pedropathing.ftc.localization.Encoder;
+import com.pedropathing.ftc.localization.constants.TwoWheelConstants;
 import com.pedropathing.paths.PathConstraints;
-import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
@@ -17,7 +19,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
  * Pedro Pathing constants. EVERY value here is robot-specific:
  * run the tuning OpModes and follow https://pedropathing.com/docs/pathing/tuning
  * before trusting any path. This scaffold assumes a mecanum drivetrain with a
- * goBILDA Pinpoint localizer; swap the localizer/drivetrain builder calls if
+ * two-dead-wheel + IMU localizer; swap the localizer/drivetrain builder calls if
  * your robot differs (see docs: pathing/tuning/localization).
  */
 public class Constants {
@@ -29,34 +31,67 @@ public class Constants {
             .translationalPIDFCoefficients(new PIDFCoefficients(0.1, 0, 0.01, 0.015))
             .headingPIDFCoefficients(new PIDFCoefficients(1.0, 0, 0.05, 0.01))
             .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.025, 0, 0.00001, 0.6, 0.01))
-            .centripetalScaling(0.0005);
+            // Predictive braking (replaces the translational and drive PIDFs): (kP, kLinearBraking, kQuadraticFriction).
+            // kLinear 0.059286 and kQuadratic 0.0014601 are the average of 3 Predictive Braking Tuner runs after the weight was added
+            // (kQuad, kLinear): (0.00150, 0.056444), (0.001408, 0.061957), (0.0014723, 0.059457).
+            // kP was 1.0 (best straight-line in the Line test) but made the robot shake sideways when holding a point or
+            // turning, so it is 0.3 now (Pedro's docs call 0.05 to 0.3 typical). Re-check the Line test at this value.
+            .predictiveBrakingCoefficients(new PredictiveBrakingCoefficients(0.3, 0.059286, 0.0014601))
+            .centripetalScaling(0); // off: predictive braking handles it
 
     public static MecanumConstants driveConstants = new MecanumConstants()
             .leftFrontMotorName("lf")   // matches team's existing Driver Station config names
             .leftRearMotorName("lb")
             .rightFrontMotorName("rf")
             .rightRearMotorName("rb")
-            .leftFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
-            .leftRearMotorDirection(DcMotorSimple.Direction.REVERSE)
-            .rightFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
-            .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
-            .xVelocity(57.8)  // TODO: from Forward Velocity tuner
-            .yVelocity(52.3); // TODO: from Strafe Velocity tuner
+            // All four are the OPPOSITE of Pedro's defaults (left REVERSE, right FORWARD): on this robot every movement the follower
+            // asked for came out as its inverse. The dead wheels are not affected: Pedro's Encoder multiplies each pod's reading
+            // by its motor's direction, which cancels the direction setting.
+            .leftFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
+            .leftRearMotorDirection(DcMotorSimple.Direction.FORWARD)
+            .rightFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
+            .rightRearMotorDirection(DcMotorSimple.Direction.REVERSE)
+            .xVelocity(62.8507)  // Forward Velocity tuner, average of 4 runs after the weight was added (62.8331, 62.8842, 63.0090, 62.6764)
+            .yVelocity(53.5949); // Lateral Velocity tuner, average of 4 runs after the weight was added (53.8077, 53.5114, 53.6477, 53.4128)
 
-    public static PinpointConstants localizerConstants = new PinpointConstants()
-            .forwardPodY(1.0)  // TODO: measure once pods are mounted (see pod offset guidance)
-            .strafePodX(-2.5)
-            .hardwareMapName("pinpoint") // I2C port 1, 2, or 3 on the Driver Station config — never port 0
-            .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)
-            .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD);
+    // Two goBILDA dead wheels + the Control Hub IMU (no Pinpoint). Pod encoders plug into REV hub encoder
+    // ports; heading comes from the hub IMU. See docs/ODOMETRY.md for placement, wiring and verification.
+    public static TwoWheelConstants localizerConstants = new TwoWheelConstants()
+            // Each pod's encoder plugs into the encoder connector of the Control Hub port of this motor
+            // (see docs/HARDWARE_CONFIG.md). rf/rb are drive motors that don't need their own encoders.
+            .forwardEncoder_HardwareMapName("rf")
+            .strafeEncoder_HardwareMapName("rb")
+            .IMU_HardwareMapName("imu")
+            // Control Hub mounted with the REV logo facing the robot's front and the USB port facing up.
+            .IMU_Orientation(new RevHubOrientationOnRobot(
+                    RevHubOrientationOnRobot.LogoFacingDirection.FORWARD,
+                    RevHubOrientationOnRobot.UsbFacingDirection.UP))
+            // Offsets in inches from the robot's center of rotation.
+            // forwardPodY: sideways offset of the FORWARD pod wheel, LEFT of centre positive.
+            // strafePodX:  fore/aft offset of the STRAFE pod wheel, FORWARD of centre positive.
+            // From the Offsets Tuner, average of 3 runs: forwardY 0.4168, 0.1921, -0.0543; strafeX 0.1711, 0.2964, 0.1304.
+            // Re-run the Offsets Tuner after the other subsystems are mounted (the center of rotation moves).
+            // The pods were then moved BACK 2 in (toward the rear). Only the strafe pod's fore/aft offset depends on that, so strafePodX is
+            // 0.199 - 2.0 = -1.801; forwardPodY (sideways) is unchanged. Verify with the spin test in docs/TUNING.md (2b).
+            .forwardPodY(0.185)
+            .strafePodX(-1.801)
+            // Inches per encoder tick. Forward: Forward Tuner, average of 3 runs (0.0019672, 0.0019724, 0.0019688).
+            // Strafe: Lateral Tuner, average of 3 runs (0.0019752, 0.0019754, 0.0019753; the tuner showed them negative).
+            .forwardTicksToInches(0.0019695)
+            .strafeTicksToInches(0.0019753)
+            // Both pods are flipped from before. Localization Test (robot moved forward, then left): x went DOWN and y went DOWN, so both
+            // read backwards. Forward pod: REVERSE -> FORWARD. Strafe pod: FORWARD -> REVERSE. Re-check after any change to the pod wiring:
+            // push forward, x must rise; push left, y must rise.
+            .forwardEncoderDirection(Encoder.FORWARD)
+            .strafeEncoderDirection(Encoder.REVERSE);
 
     public static PathConstraints pathConstraints = new PathConstraints(
-            0.995, 0.1, 0.1, 0.009, 50, 1.25, 10, 1);
+            0.97, 0.1, 0.1, 0.009, 50, 1.25, 10, 1); // 0.97 = parametric end constraint, lowered for predictive braking (keep >= 0.9)
 
     public static Follower createFollower(HardwareMap hardwareMap) {
         return new FollowerBuilder(followerConstants, hardwareMap)
                 .mecanumDrivetrain(driveConstants)
-                .pinpointLocalizer(localizerConstants)
+                .twoWheelLocalizer(localizerConstants)
                 .pathConstraints(pathConstraints)
                 .build();
     }

@@ -55,6 +55,13 @@ public class RobotHealthMonitor {
     public static double STALL_VELOCITY_TICKS_PER_SEC = 5.0;
     public static double STALL_TIME_SEC = 0.75;
 
+    /**
+     * How often the hub is asked for the battery voltage and each motor's current and velocity, seconds. Each of those is a separate
+     * round trip to a hub (current is not in the bulk read), so doing all of them every loop (about 14 round trips with six motors on
+     * two hubs) made the OpMode loop slow enough to hurt driving. 0.1 s keeps the stall and brownout warnings working.
+     */
+    public static double SAMPLE_PERIOD_SEC = 0.1;
+
     // --- Noisy/intermittent connection detection: current swings wildly at steady commanded power. ---
     public static double NOISY_CURRENT_STDDEV_AMPS = 2.5;
     private static final int WINDOW_SIZE = 25; // rolling sample window per motor
@@ -69,6 +76,7 @@ public class RobotHealthMonitor {
     private final File logFile;
     private final String opModeName;
 
+    private double lastSampleSec = Double.NEGATIVE_INFINITY;
     private double batteryVoltage = Double.POSITIVE_INFINITY;
     private double batteryPercent = 100;
 
@@ -95,26 +103,30 @@ public class RobotHealthMonitor {
 
     /** Call once per loop. Rumbles gamepadToNotify briefly the moment a new warning first appears. */
     public void update(Gamepad gamepadToNotify) {
-        sampleBattery();
-        activeWarnings.clear();
-        checkBatteryWarnings();
-        for (MonitoredMotor motor : motors) {
-            motor.sample();
-            motor.checkWarnings(activeWarnings);
-        }
-
-        boolean hasNewWarning = false;
-        for (String warning : activeWarnings) {
-            if (!previousWarnings.contains(warning)) {
-                hasNewWarning = true;
-                logEvent(warning);
+        double now = System.nanoTime() / 1e9;
+        if (now - lastSampleSec >= SAMPLE_PERIOD_SEC) {
+            lastSampleSec = now;
+            sampleBattery();
+            activeWarnings.clear();
+            checkBatteryWarnings();
+            for (MonitoredMotor motor : motors) {
+                motor.sample();
+                motor.checkWarnings(activeWarnings);
             }
-        }
-        previousWarnings.clear();
-        previousWarnings.addAll(activeWarnings);
 
-        if (hasNewWarning && gamepadToNotify != null) {
-            gamepadToNotify.rumble(300);
+            boolean hasNewWarning = false;
+            for (String warning : activeWarnings) {
+                if (!previousWarnings.contains(warning)) {
+                    hasNewWarning = true;
+                    logEvent(warning);
+                }
+            }
+            previousWarnings.clear();
+            previousWarnings.addAll(activeWarnings);
+
+            if (hasNewWarning && gamepadToNotify != null) {
+                gamepadToNotify.rumble(300);
+            }
         }
 
         publishTelemetry();

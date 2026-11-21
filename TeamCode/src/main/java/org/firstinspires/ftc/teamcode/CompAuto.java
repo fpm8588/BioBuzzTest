@@ -10,9 +10,8 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
-import org.firstinspires.ftc.teamcode.subsystems.Intake;
-import org.firstinspires.ftc.teamcode.subsystems.Limelight;
-import org.firstinspires.ftc.teamcode.subsystems.Shooter;
+// DISABLED (Limelight not part of this auto yet):
+// import org.firstinspires.ftc.teamcode.subsystems.Limelight;
 import org.firstinspires.ftc.teamcode.util.Drawing;
 import org.firstinspires.ftc.teamcode.util.RobotHealthMonitor;
 import org.firstinspires.ftc.teamcode.util.Stats;
@@ -23,9 +22,8 @@ import org.firstinspires.ftc.teamcode.util.Stats;
  * heading in radians. Replace the poses below with ones for your routine
  * (the Pedro visualizer at https://visualizer.pedropathing.com helps).
  *
- * This is a test-build skeleton: it demonstrates driving to a pose, running the
- * shooter/intake for a timed scoring window, reading the Limelight, and parking.
- * Replace the scoring logic and poses once this season's field/game is known.
+ * This is a test-build skeleton: it demonstrates driving to a pose and parking. It does not use the Shoot or
+ * Intake yet. Replace the poses (and add the scoring steps) once this season's field/game is known.
  */
 @Autonomous(name = "Competition Auto", group = "Competition")
 public class CompAuto extends LinearOpMode {
@@ -34,13 +32,9 @@ public class CompAuto extends LinearOpMode {
     private Timer pathTimer;
     private int pathState;
 
-    private Shooter shooter;
-    private Intake intake;
-    private Limelight limelight;
+    // private Limelight limelight; // DISABLED (Limelight not part of this auto yet)
     private Stats stats;
     private RobotHealthMonitor health;
-
-    private static final double SCORE_DURATION_SEC = 2.0;
 
     // TODO: replace with your real poses
     private final Pose startPose = new Pose(9, 72, Math.toRadians(0));
@@ -69,19 +63,6 @@ public class CompAuto extends LinearOpMode {
                 break;
             case 1:
                 if (!follower.isBusy()) {
-                    // Arrived at scorePose: spin up the shooter and feed via intake
-                    // for a fixed window. Replace with a real "shot fired" signal
-                    // (sensor or vision confirmation) once one exists.
-                    shooter.spinAtHigh();
-                    intake.intakeIn();
-                    setPathState(15); // scoring hold state
-                }
-                break;
-            case 15:
-                if (pathTimer.getElapsedTimeSeconds() > SCORE_DURATION_SEC) {
-                    shooter.stop();
-                    intake.stop();
-                    stats.recordShot(true);
                     follower.followPath(park, true);
                     setPathState(2);
                 }
@@ -103,9 +84,7 @@ public class CompAuto extends LinearOpMode {
     public void runOpMode() {
         pathTimer = new Timer();
         follower = Constants.createFollower(hardwareMap);
-        shooter = new Shooter(hardwareMap);
-        intake = new Intake(hardwareMap);
-        limelight = new Limelight(hardwareMap);
+        // limelight = new Limelight(hardwareMap); // DISABLED (Limelight not part of this auto yet)
         stats = new Stats(telemetry);
         health = new RobotHealthMonitor(hardwareMap, telemetry, "CompAuto");
         Drawing.init();
@@ -120,7 +99,7 @@ public class CompAuto extends LinearOpMode {
 
         while (opModeIsActive()) {
             follower.update();
-            limelight.update();
+            // limelight.update(); // DISABLED (Limelight not part of this auto yet)
             autonomousPathUpdate();
             stats.trackPose(follower.getPose());
             health.update();
@@ -130,14 +109,12 @@ public class CompAuto extends LinearOpMode {
             telemetry.addData("x", follower.getPose().getX());
             telemetry.addData("y", follower.getPose().getY());
             telemetry.addData("heading", follower.getPose().getHeading());
-            telemetry.addData("limelight target", limelight.hasTarget());
+            // telemetry.addData("limelight target", limelight.hasTarget()); // DISABLED (Limelight not part of this auto yet)
             telemetry.update();
             stats.update();
         }
 
-        shooter.stop();
-        intake.stop();
-        limelight.stop();
+        // limelight.stop();
         stats.writeSummaryToFile("CompAuto");
     }
 }
