@@ -247,3 +247,12 @@ you place the robot, and keep people clear.
 | Drives wrong in TeleOp but right in Localization Test | Check `CompTeleOpControls` stick signs |
 
 Help: the Pedro Pathing Discord #tuning-help channel (include a video, your constants and telemetry).
+
+## TeleOp drive mode and loop speed
+
+- `CompTeleOpControls.FIELD_CENTRIC` = `false` (default): **robot-centric**, forward on the stick is where the robot's front points. `true`
+  = field-centric (the controls turn with the robot; driver A + B re-zeroes the heading). Both are available; it used to be field-centric only,
+  which feels like the controls "switch" whenever the robot turns.
+- `CompTeleOpControls.STICK_DEADZONE` = 0.08: sticks within that of centre count as zero (a worn stick would otherwise creep the robot).
+- Competition TeleOp turns on hub **bulk reads** (like the Tuning OpModes) and shows `loop: N ms` on the screen. Under about 30 ms is
+  healthy; if it is much higher, something is making extra hub reads.

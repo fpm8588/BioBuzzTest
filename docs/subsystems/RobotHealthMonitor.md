@@ -47,6 +47,7 @@ Drawing.drawDebug(follower);                 // Auto: pose + current path
 All thresholds are `@Configurable` (dashboard-tunable) starting guesses — retune once you've
 watched real match data for your motors and packs:
 
+- `SAMPLE_PERIOD_SEC` = 0.1 — how often the hub is asked for the battery voltage and each motor's current and velocity. Each is a separate round trip to a hub, so reading all of them every loop slowed the TeleOp loop and hurt driving. Telemetry is still published every loop.
 - `STALL_CURRENT_AMPS` = 5.0, `STALL_VELOCITY_TICKS_PER_SEC` = 5.0, `STALL_TIME_SEC` = 0.75
 - `NOISY_CURRENT_STDDEV_AMPS` = 2.5
 - `LOW_BATTERY_PERCENT` = 30, `CRITICAL_BATTERY_PERCENT` = 15, `BROWNOUT_VOLTAGE` = 9.5

@@ -14,12 +14,29 @@ public class CompTeleOpControls {
     // Pedro's own teleop mapping: forward is negative on the stick; Pedro's strafe is positive to the LEFT but the stick is positive to
     // the RIGHT; and a positive turn is counter-clockwise (left) but the stick is positive to the right. So all three are negated.
     // (The motor directions in Constants.java are set so that the robot then drives the way the stick points.)
-    public static double driveForward(Gamepad driver, Gamepad operator) { return -driver.left_stick_y; }
-    public static double driveStrafe(Gamepad driver, Gamepad operator) { return -driver.left_stick_x; }
+    /**
+     * Drive mode. false (as shipped) = ROBOT-centric: forward on the stick is always the way the robot's front points. true = FIELD-centric:
+     * forward on the stick is always the same way on the field, so the controls turn with the robot (the follower's heading is zero at the
+     * facing the robot had at INIT; driver A + B together re-zeroes it to the current facing). It was field-centric before, which feels like
+     * the controls "switch" every time the robot turns.
+     */
+    public static boolean FIELD_CENTRIC = false;
+
+    /** Sticks closer to centre than this count as zero (a worn stick that does not rest at exactly 0 would creep the robot). Rescaled so full stick is still 1. */
+    public static double STICK_DEADZONE = 0.08;
+
+    private static double deadzone(double v) {
+        double a = Math.abs(v);
+        if (a < STICK_DEADZONE) return 0;
+        return Math.signum(v) * (a - STICK_DEADZONE) / (1.0 - STICK_DEADZONE);
+    }
+
+    public static double driveForward(Gamepad driver, Gamepad operator) { return -deadzone(driver.left_stick_y); }
+    public static double driveStrafe(Gamepad driver, Gamepad operator) { return -deadzone(driver.left_stick_x); }
 
     /** How much of the stick the turn uses: 1.0 = full, lower = gentler (it is 0.8; it was 1.0). Slow mode still multiplies this by 0.4. */
     public static double TURN_SENSITIVITY = 0.8;
-    public static double driveTurn(Gamepad driver, Gamepad operator) { return -driver.right_stick_x * TURN_SENSITIVITY; }
+    public static double driveTurn(Gamepad driver, Gamepad operator) { return -deadzone(driver.right_stick_x) * TURN_SENSITIVITY; }
 
     // ===== SLOW MODE =====
     public static boolean slowMode(Gamepad driver, Gamepad operator) { return driver.left_trigger > 0.5; }
